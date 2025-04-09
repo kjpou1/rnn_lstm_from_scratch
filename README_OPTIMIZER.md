@@ -1,4 +1,3 @@
-
 # 📈 Optimizer Documentation
 
 This file documents the **optimizers** used in the `rnn-lstm-from-scratch` project.
@@ -14,47 +13,39 @@ We focus on **implementing optimizers manually** to better understand how parame
 ### ✍️ Update Rule (Math)
 
 Given:
-- Parameter \( \theta \) (such as weights or biases)
-- Loss function \( J(\theta) \)
-- Gradient \( \nabla_\theta J(\theta) \)
+- Parameter `θ` (such as weights or biases)
+- Loss function `J(θ)`
+- Gradient `∇θ J(θ)`
 
 The **SGD update** is:
 
-\[
-\theta := \theta - \alpha \cdot \nabla_\theta J(\theta)
-\]
+```
+θ := θ - α * ∇θ J(θ)
+```
 
 Where:
-- \( \alpha \) is the **learning rate**
-- \( \nabla_\theta J(\theta) \) is the gradient of the loss w.r.t. the parameter
+- `α` is the **learning rate**
+- `∇θ J(θ)` is the gradient of the loss w.r.t. the parameter
 
 ---
 
 ### 📚 In Context of Our RNN
 
 If parameters are:
-- \( W_{aa}, W_{ax}, W_{ya}, b_a, b_y \)
+- `Waa`, `Wax`, `Wya`, `ba`, `by`
 
 And gradients are:
-- \( dW_{aa}, dW_{ax}, dW_{ya}, db_a, db_y \)
+- `dWaa`, `dWax`, `dWya`, `dba`, `dby`
 
 Then the updates are:
 
-\[
-W_{aa} := W_{aa} - \alpha \cdot dW_{aa}
-\]
-\[
-W_{ax} := W_{ax} - \alpha \cdot dW_{ax}
-\]
-\[
-W_{ya} := W_{ya} - \alpha \cdot dW_{ya}
-\]
-\[
-b_a := b_a - \alpha \cdot db_a
-\]
-\[
-b_y := b_y - \alpha \cdot db_y
-\]
+```
+Waa := Waa - α * dWaa
+Wax := Wax - α * dWax
+Wya := Wya - α * dWya
+ba  := ba  - α * dba
+by  := by  - α * dby
+```
 
 ---
 
@@ -121,8 +112,9 @@ src/
 > 💡 **Reminder:**  
 > Our goal is to *learn by doing*, so every optimizer is implemented manually with **NumPy**, no external libraries like TensorFlow or PyTorch optimizers.
 
+---
+
 ## 🧠 Learn More
 - [Coursera NLP Sequence Models](https://www.coursera.org/learn/nlp-sequence-models/home/week/1)
 - [Backpropagation Through Time (BPTT)](https://www.coursera.org/learn/nlp-sequence-models/lecture/bc7ED/backpropagation-through-time)
 - [Improving Deep Neural Networks: Hyperparameter Tuning, Regularization and Optimization](https://www.coursera.org/learn/deep-neural-network)
----
