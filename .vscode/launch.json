@@ -1,0 +1,42 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python Debugger: Current File",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "data_prep.py",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/data_prep.py",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Train Dinos",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/train.py",
+      "console": "integratedTerminal",
+      "args": [
+        "--dataset",
+        "dinos",
+        "--iterations",
+        "22001",
+        "--sample_every",
+        "2000"
+      ]
+    },
+    {
+      "name": "Train Shakespeare",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/train.py",
+      "console": "integratedTerminal",
+      "args": ["--dataset", "shakespeare", "--iterations", "5000"]
+    }
+  ]
+}
