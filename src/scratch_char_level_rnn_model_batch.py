@@ -110,11 +110,11 @@ def train_model(X, Y, vocab_size, tokenizer, n_a=50, epochs=10, batch_size=32, l
         for batch_x, batch_y in batchify(X, Y, batch_size, seed=epoch if deterministic else None):
             for x_seq, y_seq in zip(batch_x, batch_y):
                 cache = rnn_forward(x_seq, np.zeros((n_a, 1)), parameters)
+                y_hat, *_ = cache
                 gradients, a = rnn_backward(x_seq, y_seq, parameters, cache)
                 gradients = clip(gradients, maxValue=clip_value)
                 parameters = optimizer.update(parameters, gradients)
 
-                y_hat, *_ = cache
                 curr_loss = cross_entropy_loss(y_hat, y_seq)
                 loss = smooth(loss, curr_loss)
 

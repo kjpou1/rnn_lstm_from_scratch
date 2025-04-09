@@ -182,13 +182,14 @@ def main(
 
         # Forward, backward, optimize
         cache = rnn_forward(x_seq, a_prev, parameters)
+        y_hat, *_ = cache
+
         gradients, a = rnn_backward(x_seq, y_seq, parameters, cache)
         gradients = clip(gradients, maxValue=clip_value)
         parameters = optimizer.update(parameters, gradients)
 
 
         # Compute loss
-        y_hat, *_ = cache
         curr_loss = cross_entropy_loss(y_hat, y_seq)
         loss = smooth(loss, curr_loss)
 
