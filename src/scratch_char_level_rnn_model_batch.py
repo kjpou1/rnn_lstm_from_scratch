@@ -20,6 +20,7 @@ from rnn_model import initialize_rnn_parameters, rnn_forward, rnn_backward, upda
 from data_prep import load_dataset
 from utils import clip, cross_entropy_loss, get_initial_loss, pad_sequences, sample_from_logits, smooth, softmax, set_random_seed
 from tokenizer import CharTokenizer
+from optimizers.sgd_optimizer import SGDOptimizer
 
 
 def batchify(X, Y, batch_size, seed=None):
@@ -87,7 +88,7 @@ def generate_text(parameters, tokenizer, start_string="", temperature=1.0, max_l
     return start_string + generated_text
 
 
-def train_model(X, Y, vocab_size, tokenizer, n_a=50, epochs=10, batch_size=32, lr=0.01, temperature=1.0, seq_length=50, clip_value=5.0, deterministic=False):
+def train_model(X, Y, vocab_size, tokenizer, n_a=50, epochs=10, batch_size=32, learning_rate=0.01, optimizer_name="sgd", temperature=1.0, seq_length=50, clip_value=5.0, deterministic=False):
     """
     Train the scratch RNN model with batch updates.
     """
@@ -96,6 +97,12 @@ def train_model(X, Y, vocab_size, tokenizer, n_a=50, epochs=10, batch_size=32, l
     loss = get_initial_loss(vocab_size, len(X))
     best_loss = float('inf')
 
+    optimizer = None
+    if optimizer_name == "sgd":
+        optimizer = SGDOptimizer(learning_rate=learning_rate)
+    else:
+        raise ValueError(f"Unsupported optimizer: {optimizer_name}")
+    
     for epoch in range(epochs):
         epoch_loss = 0
         num_batches = 0
@@ -105,7 +112,7 @@ def train_model(X, Y, vocab_size, tokenizer, n_a=50, epochs=10, batch_size=32, l
                 cache = rnn_forward(x_seq, np.zeros((n_a, 1)), parameters)
                 gradients, a = rnn_backward(x_seq, y_seq, parameters, cache)
                 gradients = clip(gradients, maxValue=clip_value)
-                parameters = update_parameters(parameters, gradients, lr)
+                parameters = optimizer.update(parameters, gradients)
 
                 y_hat, *_ = cache
                 curr_loss = cross_entropy_loss(y_hat, y_seq)
@@ -138,6 +145,7 @@ def main():
     parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--learning_rate", type=float, default=0.01)
+    parser.add_argument("--optimizer", type=str, default="sgd", choices=["sgd"], help="Optimizer type (currently only 'sgd')")
     parser.add_argument("--temperature", type=float, default=1.0)
     parser.add_argument("--hidden_size", type=int, default=50)
     parser.add_argument("--seq_length", type=int, default=50)
@@ -171,11 +179,13 @@ def main():
         n_a=args.hidden_size,
         epochs=args.epochs,
         batch_size=args.batch_size,
-        lr=args.learning_rate,
+        learning_rate=args.learning_rate,
+        optimizer_name=args.optimizer, 
         temperature=args.temperature,
         seq_length=args.seq_length,
         clip_value=args.clip_value,
         deterministic=args.deterministic,
+        
     )
 
         # Print the final loss

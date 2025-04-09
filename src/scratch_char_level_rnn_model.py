@@ -63,6 +63,7 @@ from utils import (
     smooth,
     softmax,
 )
+from optimizers.sgd_optimizer import SGDOptimizer
 
 
 def generate_text(
@@ -139,6 +140,7 @@ def main(
     n_a=50,
     num_iterations=10000,
     learning_rate=0.01,
+    optimizer_name="sgd",
     temperature=1.0,
     sample_every=1000,
     seq_length=25,
@@ -164,6 +166,13 @@ def main(
     loss = get_initial_loss(vocab_size, len(X))
     best_loss = float("inf")
 
+    optimizer = None
+    if optimizer_name == "sgd":
+        optimizer = SGDOptimizer(learning_rate=learning_rate)
+    else:
+        raise ValueError(f"Unsupported optimizer: {optimizer_name}")
+
+
     last_dino_name = "abc"
 
     for iteration in range(num_iterations):
@@ -175,7 +184,8 @@ def main(
         cache = rnn_forward(x_seq, a_prev, parameters)
         gradients, a = rnn_backward(x_seq, y_seq, parameters, cache)
         gradients = clip(gradients, maxValue=clip_value)
-        parameters = update_parameters(parameters, gradients, learning_rate)
+        parameters = optimizer.update(parameters, gradients)
+
 
         # Compute loss
         y_hat, *_ = cache
@@ -240,6 +250,7 @@ if __name__ == "__main__":
     parser.add_argument("--dataset", type=str, default="dinos", help="Dataset name")
     parser.add_argument("--iterations", type=int, default=10000, help="Training steps")
     parser.add_argument("--learning_rate", type=float, default=0.01)
+    parser.add_argument("--optimizer", type=str, default="sgd", choices=["sgd"], help="Optimizer type (currently only 'sgd')")
     parser.add_argument("--temperature", type=float, default=1.0)
     parser.add_argument("--hidden_size", type=int, default=50)
     parser.add_argument("--sample_every", type=int, default=1000)
@@ -249,20 +260,15 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     print("Training Parameters:")
-    print(f"  Dataset: {args.dataset}")
-    print(f"  Iterations: {args.iterations}")
-    print(f"  Learning Rate: {args.learning_rate}")
-    print(f"  Temperatue: {args.temperature}")
-    print(f"  Hidden Size: {args.hidden_size}")
-    print(f"  Sequence Length: {args.seq_length}")
-    print(f"  Sample Every: {args.sample_every}")
-    print(f"  Clip Value: {args.clip_value}")
+    for arg, value in vars(args).items():
+        print(f"  {arg}: {value}")
 
     main(
         dataset_name=args.dataset,
         n_a=args.hidden_size,
         num_iterations=args.iterations,
         learning_rate=args.learning_rate,
+        optimizer_name=args.optimizer, 
         temperature=args.temperature,
         sample_every=args.sample_every,
         seq_length=args.seq_length,
