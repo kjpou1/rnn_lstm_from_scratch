@@ -56,7 +56,7 @@ for param_name in parameters:
     parameters[param_name] -= learning_rate * gradients["d" + param_name]
 ```
 
-In our code, this is handled by the `SGDOptimizer` class.
+Handled by the `SGDOptimizer` class.
 
 ---
 
@@ -111,30 +111,28 @@ Waa    := Waa + v_dWaa
 
 ### 🧠 Practical Observations from Training
 
-**Choosing the right learning rate (α) and momentum (β) is critical:**
+Choosing the right learning rate **(α)** and momentum **(β)** is critical:
 
 | Parameter | Typical Range | Effect |
 |:----------|:--------------|:-------|
 | **Learning rate (α)** | 0.001 – 0.01 | Smaller values help prevent overshooting when momentum is high |
-| **Momentum coefficient (β)** | 0.9 – 0.99 | Higher values smooth updates but can also cause overshooting |
+| **Momentum coefficient (β)** | 0.9 – 0.99 | Higher values smooth updates but can cause overshooting |
 
 ---
 
 ### ⚡ Practical Observations
 
 - **If the learning rate is too large** (e.g., 0.1 or higher):
-  - The momentum effect can cause **overshooting**.
-  - Model oscillates wildly or diverges (loss increases).
+  - Momentum causes **overshooting** and unstable training.
 
 - **Solution:**
-  - **Lower the learning rate** (e.g., 0.01 or 0.001) when using momentum.
-  - **Tune β carefully** — start with 0.9 and adjust slightly if needed.
+  - Lower learning rate to 0.01 or 0.001.
+  - Tune β carefully (typically start with 0.9).
 
 - **If β is too high** (e.g., 0.99+):
-  - Momentum builds up too much and may "blow past" the minimum.
-  - Training becomes unstable unless learning rate is very small.
+  - Momentum builds too much and may "blow past" minima.
 
-✅ In our scratch experiments, **MomentumOptimizer** performed poorly with **α = 0.1**, but **improved significantly** when we reduced **α** to **0.01** or even **0.001**.
+✅ In scratch experiments, **MomentumOptimizer** performed **poorly with α = 0.1**, but improved **significantly when α = 0.01** or smaller.
 
 ---
 
@@ -149,22 +147,73 @@ Waa    := Waa + v_dWaa
 ---
 
 > ⚡ **Bottom line:**  
-> **Momentum can speed up convergence** and **smooth training**, but **only if the learning rate and momentum are carefully tuned together.**
+> **Momentum can accelerate convergence**, but **only if α and β are tuned together carefully**.
 
 ---
 
-## 📜 Current Optimizer Status
+## 🚀 3. RMSProp Optimizer
+
+### ✍️ Update Rule (Math)
+
+Given:
+- Running average of squared gradients **s**
+- Parameters **θ**
+- Gradients **∇θ J(θ)**
+
+The **RMSProp** update is:
+
+```
+s := β * s + (1 - β) * (∇θ J(θ))²
+θ := θ - α * ∇θ J(θ) / (√s + ε)
+```
+
+Where:
+- **s** is the exponentially decaying average of squared gradients
+- **β** is the decay rate (e.g., 0.9)
+- **ε** is a small constant to prevent division by zero (e.g., 1e-8)
+
+---
+
+### 📚 In Context of Our RNN
+
+```
+s_dWaa := β * s_dWaa + (1 - β) * (dWaa)²
+Waa    := Waa - α * dWaa / (√s_dWaa + ε)
+```
+(Similar updates for `Wax`, `Wya`, `ba`, and `by`.)
+
+---
+
+### ✅ Key Properties
+| Property | Behavior |
+|:---------|:---------|
+| Adaptive Learning Rates | Learns per-parameter step sizes |
+| Reduces Oscillations | Especially on noisy or non-stationary objectives |
+| Sensitive to Hyperparameters | β and α must be tuned carefully |
+
+---
+
+### 📉 When to Use
+- **Training is noisy**
+- **Gradients vary a lot in scale**
+- **Want adaptive learning rates automatically**
+
+✅ In practice, RMSProp often speeds up convergence compared to SGD and plain momentum.
+
+---
+
+# 📜 Current Optimizer Status
 
 | Optimizer | Status |
 |:----------|:-------|
 | SGD (vanilla) | ✅ Implemented |
 | Momentum | ✅ Implemented |
-| RMSProp | 🔜 Planned |
+| RMSProp | ✅ Implemented |
 | Adam | 🔜 Planned |
 
 ---
 
-✅ As we add more optimizers like **RMSProp** and **Adam**, they will be documented here with:
+✅ As we add more optimizers like **Adam**, they will be documented here with:
 - Update equations
 - Behavior summary
 - Code examples
@@ -176,11 +225,11 @@ Waa    := Waa + v_dWaa
 ```
 src/
 └── optimizers/
-    ├── optimizer.py          # Base optimizer class
-    ├── sgd_optimizer.py      # SGD optimizer
-    ├── momentum_optimizer.py # Momentum optimizer
-    ├── rmsprop_optimizer.py  # (planned)
-    └── adam_optimizer.py     # (planned)
+    ├── optimizer.py           # Base optimizer class
+    ├── sgd_optimizer.py       # SGD optimizer
+    ├── momentum_optimizer.py  # Momentum optimizer
+    ├── rmsprop_optimizer.py   # RMSProp optimizer
+    └── adam_optimizer.py      # (planned)
 ```
 
 ---
@@ -194,3 +243,4 @@ src/
 - [Coursera NLP Sequence Models](https://www.coursera.org/learn/nlp-sequence-models/home/week/1)
 - [Backpropagation Through Time (BPTT)](https://www.coursera.org/learn/nlp-sequence-models/lecture/bc7ED/backpropagation-through-time)
 - [Improving Deep Neural Networks: Hyperparameter Tuning, Regularization and Optimization](https://www.coursera.org/learn/deep-neural-network)
+

@@ -22,6 +22,7 @@ from utils import clip, cross_entropy_loss, get_initial_loss, pad_sequences, sam
 from tokenizer import CharTokenizer
 from optimizers.sgd_optimizer import SGDOptimizer
 from optimizers.momentum_optimizer import MomentumOptimizer
+from optimizers.rmsprop_optimizer import RMSPropOptimizer
 
 
 def batchify(X, Y, batch_size, seed=None):
@@ -96,6 +97,8 @@ def get_optimizer(name, learning_rate):
         return SGDOptimizer(learning_rate=learning_rate)
     elif name == "momentum":
         return MomentumOptimizer(learning_rate=learning_rate, momentum=0.9)
+    elif name == "rms":
+        return RMSPropOptimizer(learning_rate=learning_rate, beta=0.9)
     else:
         raise ValueError(f"Unsupported optimizer: {name}. Choose from ['sgd']")
 
@@ -152,7 +155,7 @@ def main():
     parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--learning_rate", type=float, default=0.01)
-    parser.add_argument("--optimizer", type=str, default="sgd", choices=["sgd", "momentum"], help="Optimizer type (default: 'sgd')")
+    parser.add_argument("--optimizer", type=str, default="sgd", choices=["sgd", "momentum", "rms"], help="Optimizer type (default: 'sgd')")
     parser.add_argument("--temperature", type=float, default=1.0)
     parser.add_argument("--hidden_size", type=int, default=50)
     parser.add_argument("--seq_length", type=int, default=50)
