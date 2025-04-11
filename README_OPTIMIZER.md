@@ -13,38 +13,38 @@ We focus on **implementing optimizers manually** to better understand how parame
 ### ✍️ Update Rule (Math)
 
 Given:
-- Parameter `θ` (such as weights or biases)
-- Loss function `J(θ)`
-- Gradient `∇θ J(θ)`
+- Parameter **θ** (such as weights or biases)
+- Loss function **J(θ)**
+- Gradient **∇θ J(θ)**
 
-The **SGD update** is:
+The **SGD update rule** is:
 
 ```
-θ := θ - α * ∇θ J(θ)
+θ := θ - α ∇θ J(θ)
 ```
 
 Where:
-- `α` is the **learning rate**
-- `∇θ J(θ)` is the gradient of the loss w.r.t. the parameter
+- **α** is the **learning rate**
+- **∇θ J(θ)** is the **gradient** of the loss function with respect to the parameter θ
 
 ---
 
 ### 📚 In Context of Our RNN
 
 If parameters are:
-- `Waa`, `Wax`, `Wya`, `ba`, `by`
+- **Waa**, **Wax**, **Wya**, **ba**, **by**
 
 And gradients are:
-- `dWaa`, `dWax`, `dWya`, `dba`, `dby`
+- **dWaa**, **dWax**, **dWya**, **dba**, **dby**
 
 Then the updates are:
 
 ```
-Waa := Waa - α * dWaa
-Wax := Wax - α * dWax
-Wya := Wya - α * dWya
-ba  := ba  - α * dba
-by  := by  - α * dby
+Waa := Waa - α dWaa
+Wax := Wax - α dWax
+Wya := Wya - α dWya
+ba  := ba  - α dba
+by  := by  - α dby
 ```
 
 ---
@@ -61,60 +61,136 @@ In our code, this is handled by the `SGDOptimizer` class.
 ---
 
 ### ✅ Key Properties
-| Property | Behavior |
-|:---------|:---------|
-| Simplicity | Very easy to implement |
-| Memory Usage | Very low (no extra state needed) |
-| Convergence | Can be slow if learning rate is not tuned |
-| Instability | Sensitive to learning rate, no momentum |
+
+| Property        | Behavior                                |
+|:----------------|:----------------------------------------|
+| Simplicity      | Very easy to implement                  |
+| Memory Usage    | Very low (no extra state needed)         |
+| Convergence     | Can be slow if learning rate not tuned  |
+| Instability     | Sensitive to learning rate, no momentum |
 
 ---
 
 ### 📉 When to Use
+
 - **Simple problems**
 - **Small datasets**
 - When learning rate is carefully tuned manually
 
 ---
 
-## 📜 Upcoming Optimizers
+## 🚀 2. Momentum Optimizer
 
-| Optimizer | Status |
-|:----------|:-------|
-| SGD (vanilla) | ✅ Implemented |
-| Momentum | 🔜 In Progress |
-| RMSProp | 🔜 Planned |
-| Adam | 🔜 Planned |
+### ✍️ Update Rule (Math)
+
+Momentum adds a velocity term **v** to smooth updates:
+
+```
+v := β v - α ∇θ J(θ)
+θ := θ + v
+```
+
+Where:
+- **β** is the **momentum coefficient** (typically 0.9)
+- **v** is the **velocity** (running sum of past gradients)
+- **α** is the **learning rate**
+- **∇θ J(θ)** is the gradient
 
 ---
 
-✅ As we add more optimizers like **Momentum**, **RMSProp**, and **Adam**, they will be documented here with:
+### 📚 In Context of Our RNN
+
+The parameter updates now consider *previous gradients*:
+
+1. Update velocity:
+
+```
+v_dWaa = β v_dWaa - α dWaa
+v_dWax = β v_dWax - α dWax
+...
+```
+
+2. Update parameters:
+
+```
+Waa := Waa + v_dWaa
+Wax := Wax + v_dWax
+...
+```
+
+---
+
+### 🧩 Python Pseudocode
+
+```python
+for grad, param in grads_and_vars:
+    v = momentum * v - learning_rate * grad
+    param += v
+```
+
+In our code, this is handled by the `MomentumOptimizer` class.
+
+---
+
+### ✅ Key Properties
+
+| Property        | Behavior                                |
+|:----------------|:----------------------------------------|
+| Smoother updates | Less oscillation compared to SGD       |
+| Faster convergence | Can speed up training significantly |
+| Requires tuning | Need to choose **α** and **β** carefully |
+
+---
+
+### 📉 When to Use
+
+- Training is slow or oscillatory
+- Need to escape local minima
+- Common when learning simple RNNs or small LSTMs
+
+---
+
+## 📜 Optimizer Status
+
+| Optimizer  | Status         |
+|:-----------|:---------------|
+| SGD        | ✅ Implemented |
+| Momentum   | ✅ Implemented |
+| RMSProp    | 🔜 Planned     |
+| Adam       | 🔜 Planned     |
+
+---
+
+✅ As we add **RMSProp** and **Adam**, we will document them here with:
 - Update equations
-- Behavior summary
-- Code examples
+- Python pseudocode
+- Practical usage notes
 
 ---
 
-# 🛠️ File Structure (Coming Soon)
+# 🛠️ Optimizer Code Layout
 
 ```
 src/
 └── optimizers/
-    ├── optimizer_base.py    # Base optimizer class
-    ├── sgd_optimizer.py     # SGD optimizer
-    ├── momentum_optimizer.py # Momentum optimizer (planned)
-    ├── rmsprop_optimizer.py # RMSProp optimizer (planned)
-    └── adam_optimizer.py    # Adam optimizer (planned)
+    ├── optimizer.py          # Base optimizer class
+    ├── sgd_optimizer.py      # SGD optimizer
+    ├── momentum_optimizer.py # Momentum optimizer
+    ├── rmsprop_optimizer.py  # (planned)
+    └── adam_optimizer.py     # (planned)
 ```
 
 ---
 
 > 💡 **Reminder:**  
-> Our goal is to *learn by doing*, so every optimizer is implemented manually with **NumPy**, no external libraries like TensorFlow or PyTorch optimizers.
+> All optimizers are implemented manually with **NumPy**, no external libraries like TensorFlow or PyTorch.
 
 ---
 
 ## 🧠 Learn More
+
 - [Coursera NLP Sequence Models](https://www.coursera.org/learn/nlp-sequence-models/home/week/1)
 - [Backpropagation Through Time (BPTT)](https://www.coursera.org/learn/nlp-sequence-models/lecture/bc7ED/backpropagation-through-time)
 - [Improving Deep Neural Networks: Hyperparameter Tuning, Regularization and Optimization](https://www.coursera.org/learn/deep-neural-network)
+
+---
