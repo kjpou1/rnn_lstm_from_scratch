@@ -1,6 +1,8 @@
-class SGDOptimizer:
+from .optimizer import Optimizer
+
+class SGDOptimizer(Optimizer):
     def __init__(self, learning_rate=0.01):
-        self.learning_rate = learning_rate
+        super().__init__(learning_rate)
 
     def update(self, parameters, gradients):
         """
@@ -20,14 +22,7 @@ class SGDOptimizer:
             param = parameters[key]
             grads_and_vars.append((grad, param))
         
-        # Apply gradients
+        # Use parent apply_gradients
         self.apply_gradients(grads_and_vars)
 
         return parameters
-
-    def apply_gradients(self, grads_and_vars):
-        """
-        Apply gradients from list of (gradient, parameter) tuples (TensorFlow-style).
-        """
-        for grad, param in grads_and_vars:
-            param -= self.learning_rate * grad
