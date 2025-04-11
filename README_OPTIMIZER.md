@@ -17,34 +17,34 @@ Given:
 - Loss function **J(θ)**
 - Gradient **∇θ J(θ)**
 
-The **SGD update rule** is:
+The **SGD update** is:
 
 ```
-θ := θ - α ∇θ J(θ)
+θ := θ - α * ∇θ J(θ)
 ```
 
 Where:
 - **α** is the **learning rate**
-- **∇θ J(θ)** is the **gradient** of the loss function with respect to the parameter θ
+- **∇θ J(θ)** is the gradient of the loss w.r.t. the parameter.
 
 ---
 
 ### 📚 In Context of Our RNN
 
 If parameters are:
-- **Waa**, **Wax**, **Wya**, **ba**, **by**
+- `Waa`, `Wax`, `Wya`, `ba`, `by`
 
 And gradients are:
-- **dWaa**, **dWax**, **dWya**, **dba**, **dby**
+- `dWaa`, `dWax`, `dWya`, `dba`, `dby`
 
 Then the updates are:
 
 ```
-Waa := Waa - α dWaa
-Wax := Wax - α dWax
-Wya := Wya - α dWya
-ba  := ba  - α dba
-by  := by  - α dby
+Waa := Waa - α * dWaa
+Wax := Wax - α * dWax
+Wya := Wya - α * dWya
+ba  := ba  - α * dba
+by  := by  - α * dby
 ```
 
 ---
@@ -61,18 +61,16 @@ In our code, this is handled by the `SGDOptimizer` class.
 ---
 
 ### ✅ Key Properties
-
-| Property        | Behavior                                |
-|:----------------|:----------------------------------------|
-| Simplicity      | Very easy to implement                  |
-| Memory Usage    | Very low (no extra state needed)         |
-| Convergence     | Can be slow if learning rate not tuned  |
-| Instability     | Sensitive to learning rate, no momentum |
+| Property | Behavior |
+|:---------|:---------|
+| Simplicity | Very easy to implement |
+| Memory Usage | Very low (no extra state needed) |
+| Convergence | Can be slow if learning rate is not tuned |
+| Instability | Sensitive to learning rate, no momentum |
 
 ---
 
 ### 📉 When to Use
-
 - **Simple problems**
 - **Small datasets**
 - When learning rate is carefully tuned manually
@@ -83,92 +81,97 @@ In our code, this is handled by the `SGDOptimizer` class.
 
 ### ✍️ Update Rule (Math)
 
-Momentum adds a velocity term **v** to smooth updates:
+Given:
+- Velocity vector **v**
+- Parameters **θ**
+- Gradients **∇θ J(θ)**
+
+The **Momentum** update is:
 
 ```
-v := β v - α ∇θ J(θ)
+v := β * v - α * ∇θ J(θ)
 θ := θ + v
 ```
 
 Where:
-- **β** is the **momentum coefficient** (typically 0.9)
-- **v** is the **velocity** (running sum of past gradients)
-- **α** is the **learning rate**
-- **∇θ J(θ)** is the gradient
+- **β** is the momentum coefficient (e.g., 0.9)
+- **α** is the learning rate
 
 ---
 
 ### 📚 In Context of Our RNN
 
-The parameter updates now consider *previous gradients*:
-
-1. Update velocity:
-
 ```
-v_dWaa = β v_dWaa - α dWaa
-v_dWax = β v_dWax - α dWax
-...
+v_dWaa := β * v_dWaa - α * dWaa
+Waa    := Waa + v_dWaa
 ```
-
-2. Update parameters:
-
-```
-Waa := Waa + v_dWaa
-Wax := Wax + v_dWax
-...
-```
+(Similar updates for `Wax`, `Wya`, `ba`, and `by`.)
 
 ---
 
-### 🧩 Python Pseudocode
+### 🧠 Practical Observations from Training
 
-```python
-for grad, param in grads_and_vars:
-    v = momentum * v - learning_rate * grad
-    param += v
-```
+**Choosing the right learning rate (α) and momentum (β) is critical:**
 
-In our code, this is handled by the `MomentumOptimizer` class.
-
----
-
-### ✅ Key Properties
-
-| Property        | Behavior                                |
-|:----------------|:----------------------------------------|
-| Smoother updates | Less oscillation compared to SGD       |
-| Faster convergence | Can speed up training significantly |
-| Requires tuning | Need to choose **α** and **β** carefully |
+| Parameter | Typical Range | Effect |
+|:----------|:--------------|:-------|
+| **Learning rate (α)** | 0.001 – 0.01 | Smaller values help prevent overshooting when momentum is high |
+| **Momentum coefficient (β)** | 0.9 – 0.99 | Higher values smooth updates but can also cause overshooting |
 
 ---
 
-### 📉 When to Use
+### ⚡ Practical Observations
 
-- Training is slow or oscillatory
-- Need to escape local minima
-- Common when learning simple RNNs or small LSTMs
+- **If the learning rate is too large** (e.g., 0.1 or higher):
+  - The momentum effect can cause **overshooting**.
+  - Model oscillates wildly or diverges (loss increases).
+
+- **Solution:**
+  - **Lower the learning rate** (e.g., 0.01 or 0.001) when using momentum.
+  - **Tune β carefully** — start with 0.9 and adjust slightly if needed.
+
+- **If β is too high** (e.g., 0.99+):
+  - Momentum builds up too much and may "blow past" the minimum.
+  - Training becomes unstable unless learning rate is very small.
+
+✅ In our scratch experiments, **MomentumOptimizer** performed poorly with **α = 0.1**, but **improved significantly** when we reduced **α** to **0.01** or even **0.001**.
 
 ---
 
-## 📜 Optimizer Status
+### 🏃‍♂️ Quick Guide
 
-| Optimizer  | Status         |
-|:-----------|:---------------|
-| SGD        | ✅ Implemented |
-| Momentum   | ✅ Implemented |
-| RMSProp    | 🔜 Planned     |
-| Adam       | 🔜 Planned     |
+| Setup | Behavior |
+|:------|:---------|
+| **High α + High β** | 🚀 Overshoots! Model unstable |
+| **Low α + High β**  | 🏃‍♂️ Smooth fast convergence |
+| **Too Low α**       | 🐢 Very slow learning |
 
 ---
 
-✅ As we add **RMSProp** and **Adam**, we will document them here with:
+> ⚡ **Bottom line:**  
+> **Momentum can speed up convergence** and **smooth training**, but **only if the learning rate and momentum are carefully tuned together.**
+
+---
+
+## 📜 Current Optimizer Status
+
+| Optimizer | Status |
+|:----------|:-------|
+| SGD (vanilla) | ✅ Implemented |
+| Momentum | ✅ Implemented |
+| RMSProp | 🔜 Planned |
+| Adam | 🔜 Planned |
+
+---
+
+✅ As we add more optimizers like **RMSProp** and **Adam**, they will be documented here with:
 - Update equations
-- Python pseudocode
-- Practical usage notes
+- Behavior summary
+- Code examples
 
 ---
 
-# 🛠️ Optimizer Code Layout
+# 🛠️ Optimizer File Structure
 
 ```
 src/
@@ -183,14 +186,11 @@ src/
 ---
 
 > 💡 **Reminder:**  
-> All optimizers are implemented manually with **NumPy**, no external libraries like TensorFlow or PyTorch.
+> Our goal is to *learn by doing*, so every optimizer is implemented manually with **NumPy**, no TensorFlow or PyTorch optimizers.
 
 ---
 
 ## 🧠 Learn More
-
 - [Coursera NLP Sequence Models](https://www.coursera.org/learn/nlp-sequence-models/home/week/1)
 - [Backpropagation Through Time (BPTT)](https://www.coursera.org/learn/nlp-sequence-models/lecture/bc7ED/backpropagation-through-time)
 - [Improving Deep Neural Networks: Hyperparameter Tuning, Regularization and Optimization](https://www.coursera.org/learn/deep-neural-network)
-
----
