@@ -64,6 +64,8 @@ from utils import (
     softmax,
 )
 from optimizers.sgd_optimizer import SGDOptimizer
+from optimizers.momentum_optimizer import MomentumOptimizer
+
 
 
 def generate_text(
@@ -134,6 +136,16 @@ def generate_text(
 
     return start_string + generated_text
 
+def get_optimizer(name, learning_rate):
+    """
+    Helper to instantiate the selected optimizer.
+    """
+    if name == "sgd":
+        return SGDOptimizer(learning_rate=learning_rate)
+    elif name == "momentum":
+        return MomentumOptimizer(learning_rate=learning_rate, momentum=0.9)
+    else:
+        raise ValueError(f"Unsupported optimizer: {name}. Choose from ['sgd']")
 
 def main(
     dataset_name="dinos",
@@ -166,12 +178,7 @@ def main(
     loss = get_initial_loss(vocab_size, len(X))
     best_loss = float("inf")
 
-    optimizer = None
-    if optimizer_name == "sgd":
-        optimizer = SGDOptimizer(learning_rate=learning_rate)
-    else:
-        raise ValueError(f"Unsupported optimizer: {optimizer_name}")
-
+    optimizer = get_optimizer(optimizer_name, learning_rate)  
 
     last_dino_name = "abc"
 
@@ -251,7 +258,7 @@ if __name__ == "__main__":
     parser.add_argument("--dataset", type=str, default="dinos", help="Dataset name")
     parser.add_argument("--iterations", type=int, default=10000, help="Training steps")
     parser.add_argument("--learning_rate", type=float, default=0.01)
-    parser.add_argument("--optimizer", type=str, default="sgd", choices=["sgd"], help="Optimizer type (currently only 'sgd')")
+    parser.add_argument("--optimizer", type=str, default="sgd", choices=["sgd", "momentum"], help="Optimizer type (default: 'sgd')")
     parser.add_argument("--temperature", type=float, default=1.0)
     parser.add_argument("--hidden_size", type=int, default=50)
     parser.add_argument("--sample_every", type=int, default=1000)
