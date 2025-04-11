@@ -1,24 +1,48 @@
 class Optimizer:
     def __init__(self, learning_rate=0.01):
+        """
+        Base Optimizer class.
+
+        Args:
+            learning_rate (float): Step size for parameter updates.
+        """
         self.learning_rate = learning_rate
 
     def update(self, parameters, gradients):
-        """Directly update parameters. Traditional SGD update."""
-        raise NotImplementedError
+        """
+        Updates parameters given gradients.
+
+        This is the **scratch-style** method:
+        - Accepts dictionaries of parameters and gradients.
+        - Internally prepares (gradient, parameter) pairs.
+        - Calls `apply_gradients` to perform the update.
+
+        Args:
+            parameters (dict): Dictionary of current parameters.
+            gradients (dict): Dictionary of gradients.
+
+        Returns:
+            dict: Updated parameters.
+        """
+        grads_and_vars = []
+        for param_name in parameters:
+            grad_name = "d" + param_name  # convention: "dWaa", "dWax", etc.
+            grads_and_vars.append((gradients[grad_name], parameters[param_name]))
+
+        self.apply_gradients(grads_and_vars)
+
+        return parameters
 
     def apply_gradients(self, grads_and_vars):
         """
-        More flexible: accepts a list of (gradient, parameter) tuples.
+        Applies gradients to parameters.
 
-        Mimics TensorFlow's optimizer.apply_gradients.
+        This is the **TensorFlow-style** method:
+        - Accepts a list of (gradient, parameter) tuples.
+        - Applies the update rule.
+
+        Args:
+            grads_and_vars (list): List of (gradient, parameter) tuples.
         """
         for grad, param in grads_and_vars:
             param -= self.learning_rate * grad
-
-
-# # Scratch version
-# parameters = optimizer.update(parameters, gradients)
-
-# # More general version (future)
-# grads_and_vars = [(gradients["dWaa"], parameters["Waa"]), (gradients["dWax"], parameters["Wax"]), ...]
-# optimizer.apply_gradients(grads_and_vars)

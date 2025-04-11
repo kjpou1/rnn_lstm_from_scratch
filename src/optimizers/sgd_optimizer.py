@@ -1,14 +1,33 @@
-from optimizers.optimizer import Optimizer
-
-
-class SGDOptimizer(Optimizer):
+class SGDOptimizer:
     def __init__(self, learning_rate=0.01):
-        super().__init__(learning_rate)
+        self.learning_rate = learning_rate
 
     def update(self, parameters, gradients):
-        """Traditional parameter dict update (used in scratch RNN)."""
+        """
+        Update parameters dictionary (scratch RNN style) using apply_gradients internally.
+
+        Args:
+            parameters (dict): Dictionary of parameters.
+            gradients (dict): Dictionary of gradients.
+
+        Returns:
+            dict: Updated parameters.
+        """
+        # Build grads_and_vars list
+        grads_and_vars = []
         for key in parameters.keys():
-            parameters[key] -= self.learning_rate * gradients["d" + key]
+            grad = gradients["d" + key]
+            param = parameters[key]
+            grads_and_vars.append((grad, param))
+        
+        # Apply gradients
+        self.apply_gradients(grads_and_vars)
+
         return parameters
 
-    # apply_gradients already works from base Optimizer
+    def apply_gradients(self, grads_and_vars):
+        """
+        Apply gradients from list of (gradient, parameter) tuples (TensorFlow-style).
+        """
+        for grad, param in grads_and_vars:
+            param -= self.learning_rate * grad
