@@ -1,18 +1,16 @@
 # RNN-LSTM-from-Scratch
 
-This project implements character-level **RNNs and LSTMs** **from scratch** using only **NumPy**, alongside **TensorFlow versions** for comparison.
+Welcome to **RNN-LSTM-from-Scratch** — a hands-on lab where we **build deep learning models from the ground up**, using only **NumPy**.
 
-It’s a hands-on deep dive into **how RNNs and LSTMs really work — from first principles.**
+Learn how **recurrent neural networks** (RNNs) and **long short-term memory networks** (LSTMs) really work — no black boxes, no shortcuts.
 
 ---
 
-## 🚀 Goals
-- Understand and **implement RNNs and LSTMs** from scratch
-- Train models to generate text character-by-character
-- Explore **forward and backward passes** (including BPTT)
-- Apply **gradient clipping** to stabilize training
-- Build **custom optimizers** (SGD, RMSProp, Adam)
-- Compare **scratch NumPy** vs **TensorFlow** workflows side-by-side
+## 🚀 Why This Project?
+- Master the **nuts and bolts** of RNNs and LSTMs by building everything yourself.
+- See exactly **how models learn** through **forward passes**, **backward passes**, and **optimizer updates**.
+- Compare **pure NumPy training** vs **TensorFlow workflows** — side-by-side.
+- Build, train, debug, and **generate text** with models you fully understand.
 
 ---
 
@@ -20,50 +18,49 @@ It’s a hands-on deep dive into **how RNNs and LSTMs really work — from first
 
 ### ✅ Core Features
 - `CharTokenizer`: Maps characters ↔️ indices (with OOV support)
-- `data_prep.py`: Load raw text and create training sequences
-- `rnn_model.py`: RNN core logic (forward, backward, sampling, clipping)
+- `data_prep.py`: Load text data and create training sequences
+- `rnn_model.py`: RNN core logic (forward, backward, sampling, gradient clipping)
 
 - **Training Scripts**:
-  - `scratch_char_level_rnn_model.py`: Single example iteration training (NumPy)
+  - `scratch_char_level_rnn_model.py`: Single example training (NumPy)
   - `scratch_char_level_rnn_batch_train.py`: Mini-batch training (NumPy)
-  - `tf_char_level_rnn_model.py`: TensorFlow model (uses `model.fit`)
-  - `tf_char_rnn_manual_train.py`: TensorFlow **manual training loop** (custom batches)
+  - `tf_char_level_rnn_model.py`: TensorFlow model (`model.fit` API)
+  - `tf_char_rnn_manual_train.py`: TensorFlow model with manual training loop
   - `tf_char_rnn.py`: TensorFlow model class (`TFCharRNN`)
 
-- `utils.py`: Helper functions: softmax, loss smoothing, random seeds, etc.
-- `optimizers.py`: Custom optimizer implementations (SGD, RMSProp, Adam)
+- `utils.py`: Helper functions: softmax, loss smoothing, random seeds
+- `optimizers.py`: Custom-built SGD, RMSProp, and Adam optimizers
+
+✅ See detailed optimizer docs [**here**](README_OPTIMIZER.md).
 
 ---
 
-## 🤖 Two Modes of Training
+## 🤖 Two Ways to Train
 | Mode                 | Framework        | Description |
 |:---------------------|:-----------------|:------------|
-| **Scratch RNN**       | NumPy             | Full manual implementation (educational focus) |
-| **TensorFlow RNN**    | TensorFlow (Keras) | Used for comparison (manual batch training + fit training) |
+| **From Scratch**      | NumPy             | Full manual RNN training with explicit forward/backward passes |
+| **TensorFlow**        | TensorFlow (Keras) | High-level training for benchmarking and comparison |
 
 ---
 
-✅ TensorFlow versions (in `tf_char_*` files) are **fully isolated** and **not used** in scratch RNN training.
-
-✅ This lets you **compare side-by-side**:
-- *From-scratch NumPy workflow* vs *TensorFlow/Keras best practices*  
-- *Manual gradient updates* vs *automatic optimizers*
+✅ TensorFlow versions (in `tf_char_*` files) are **fully isolated** and **not used** in scratch training.  
+✅ Compare the low-level and high-level approaches **side-by-side**.
 
 ---
 
-## 📈 Features Table
+## 📈 Features Overview
 
-| Feature            | NumPy (Scratch) | TensorFlow Version | Status |
-|:-------------------|:----------------|:-------------------|:------:|
-| Character tokenizer | ✅ | ✅ | Complete |
-| Manual forward pass | ✅ | ✅ | Complete |
+| Feature                   | NumPy (Scratch) | TensorFlow Version | Status |
+|:---------------------------|:----------------|:-------------------|:------:|
+| Character tokenizer         | ✅ | ✅ | Complete |
+| Manual forward pass         | ✅ | ✅ | Complete |
 | Manual backward pass (BPTT) | ✅ | ✅ | Complete |
-| Mini-batching        | ✅ | ✅ | Complete |
-| Clipping gradients   | ✅ | ✅ | Complete |
-| Training with model.fit | ❌ | ✅ | Complete |
-| Manual training loop | ✅ | ✅ | Complete |
-| Sampling (temperature) | ✅ | ✅ | Complete |
-| LSTM cell            | 🔜 | 🔜 | Coming Soon |
+| Mini-batching               | ✅ | ✅ | Complete |
+| Clipping gradients          | ✅ | ✅ | Complete |
+| Training with `model.fit`   | ❌ | ✅ | Complete |
+| Manual training loop        | ✅ | ✅ | Complete |
+| Sampling (temperature)      | ✅ | ✅ | Complete |
+| LSTM cell                   | 🔜 | 🔜 | Coming Soon |
 | Optimizers (SGD, RMSProp, Adam) | ✅ | ✅ | Complete |
 
 ---
@@ -71,19 +68,45 @@ It’s a hands-on deep dive into **how RNNs and LSTMs really work — from first
 ## 📂 Project Structure
 ```
 rnn-lstm-from-scratch/
-├── data/                         # Text corpora (e.g., dinos, Shakespeare)
+├── data/
+│   ├── images/                   # Images for visualizations
+│   ├── dinos.txt                  # Dinosaur name corpus
+│   └── shakespeare.txt            # Shakespeare plays corpus
+│
 ├── src/
-│   ├── tokenizer.py              # CharTokenizer
-│   ├── data_prep.py              # Dataset loading and preparation
-│   ├── rnn_model.py              # Scratch RNN core (forward, backward)
-│   ├── scratch_char_level_rnn_model.py  # Iteration-based scratch trainer
-│   ├── scratch_char_level_rnn_batch_train.py  # Batch-based scratch trainer
-│   ├── tf_char_rnn.py            # TensorFlow RNN Model Class
+│   ├── optimizers/                # Custom optimizers
+│   │   ├── __init__.py
+│   │   ├── adam_optimizer.py
+│   │   ├── momentum_optimizer.py
+│   │   ├── optimizer.py           # Base optimizer class
+│   │   ├── rmsprop_optimizer.py
+│   │   └── sgd_optimizer.py
+│   │
+│   ├── __init__.py
+│   ├── char_level_rnn_model.py    # Character-level RNN (NumPy)
+│   ├── data_prep.py               # Dataset loading and preparation
+│   ├── rnn_model.py               # Scratch RNN core (forward, backward)
+│   ├── scratch_char_level_rnn_model_batch.py  # Scratch trainer (mini-batch)
+│   ├── scratch_char_level_rnn_model.py        # Scratch trainer (single example)
+│   ├── text_dataset.py            # Text dataset utilities
 │   ├── tf_char_level_rnn_model.py # TensorFlow model with .fit
-│   ├── tf_char_rnn_manual_train.py # TensorFlow model with manual training
-│   ├── utils.py                  # Softmax, smoothing, random seed, etc.
-│   ├── optimizers.py             # Custom optimizer implementations
-└── README.md
+│   ├── tf_char_rnn_manual_train.py # TensorFlow manual training loop
+│   ├── tf_char_rnn.py             # TensorFlow RNN model class
+│   ├── tokenizer.py               # CharTokenizer
+│   └── utils.py                   # Helper functions (softmax, loss smoothing, etc.)
+│
+├── tests/
+│   ├── optimizers/
+│   │   ├── test_adam_optimizer.py
+│   │   ├── test_momentum_optimizer.py
+│   │   ├── test_rmsprop_optimizer.py
+│   │   └── test_sgd_optimizer.py
+│
+├── .gitignore
+├── LICENSE
+├── README.md
+├── README_OPTIMIZER.md            # Optimizer-specific documentation
+├── requirements.txt
 ```
 
 ---
@@ -92,7 +115,8 @@ rnn-lstm-from-scratch/
 - `dinos.txt` — Dinosaur names
 - `shakespeare.txt` — Shakespeare plays
 
-You can add your own character-level corpus easily (just drop a `.txt` file into `data/`).
+*Want to train on your own text?*  
+Just drop a `.txt` file into the `data/` folder — you’re ready to go!
 
 ---
 
@@ -103,6 +127,7 @@ Generated: "Brontosaurus"
 Generated: "Stegoceratops"
 Generated: "Trodonax"
 ```
+
 ---
 
 ## 🛠️ Coming Soon
@@ -117,14 +142,14 @@ Generated: "Trodonax"
 
 ## 🧩 Built With
 - Python 3.10+
-- NumPy only (pure scratch)
-- No TensorFlow or PyTorch for scratch models
+- NumPy (pure scratch mode)
+- TensorFlow (comparison mode)
 
 ---
 
 ## 📬 Contributing
 Pull Requests welcome!  
-We are building a true **from-scratch RNN-LSTM lab** 🧪
+This is a **learning-first lab** for anyone who wants to truly understand RNNs and LSTMs — no magic, no shortcuts. 🧪
 
 ---
 
@@ -136,4 +161,5 @@ We are building a true **from-scratch RNN-LSTM lab** 🧪
 ---
 
 Happy building 🔁  
-Let's make it learn 🦖 ➡️ 📝
+Let's make it learn 🦖 ➡️ 📝  
+Become one with the gradients.
