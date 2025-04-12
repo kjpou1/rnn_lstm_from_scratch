@@ -24,7 +24,7 @@ The **SGD update** is:
 ```
 
 Where:
-- **α** is the **learning rate**
+- **α** is the learning rate
 - **∇θ J(θ)** is the gradient of the loss w.r.t. the parameter.
 
 ---
@@ -180,6 +180,72 @@ Where:
 s_dWaa := β * s_dWaa + (1 - β) * (dWaa)²
 Waa    := Waa - α * dWaa / (√s_dWaa + ε)
 ```
+(Similar for `Wax`, `Wya`, `ba`, and `by`.)
+
+---
+
+### ✅ Key Properties
+| Property | Behavior |
+|:---------|:---------|
+| Adaptive Learning Rates | Adjusts step size per parameter |
+| Reduces Oscillations | Especially for noisy or sparse gradients |
+| Hyperparameter Sensitivity | Requires tuning β and α |
+
+---
+
+### 📉 When to Use
+- **Training is noisy**
+- **Gradients vary a lot**
+- **Want automatic learning rate adaptation**
+
+✅ In practice, RMSProp speeds up convergence compared to SGD or plain momentum.
+
+---
+
+## 🚀 4. Adam Optimizer
+
+### ✍️ Update Rule (Math)
+
+Adam combines **Momentum** + **RMSProp**:
+
+1. **First moment estimate (mₜ):**
+
+```
+mₜ = β₁ * mₜ₋₁ + (1 - β₁) * ∇θ J(θ)
+```
+
+2. **Second moment estimate (vₜ):**
+
+```
+vₜ = β₂ * vₜ₋₁ + (1 - β₂) * (∇θ J(θ))²
+```
+
+3. **Bias correction:**
+
+```
+m̂ₜ = mₜ / (1 - β₁ᵗ)
+v̂ₜ = vₜ / (1 - β₂ᵗ)
+```
+
+4. **Update parameters:**
+
+```
+θ := θ - α * m̂ₜ / (√v̂ₜ + ε)
+```
+
+Where:
+- **α** = learning rate
+- **β₁** = momentum term (first moment, e.g., 0.9)
+- **β₂** = RMSProp term (second moment, e.g., 0.999)
+- **ε** = small value to prevent division by zero
+
+---
+
+### 📚 In Context of Our RNN
+
+```
+Waa := Waa - α * m̂_dWaa / (√v̂_dWaa + ε)
+```
 (Similar updates for `Wax`, `Wya`, `ba`, and `by`.)
 
 ---
@@ -187,36 +253,30 @@ Waa    := Waa - α * dWaa / (√s_dWaa + ε)
 ### ✅ Key Properties
 | Property | Behavior |
 |:---------|:---------|
-| Adaptive Learning Rates | Learns per-parameter step sizes |
-| Reduces Oscillations | Especially on noisy or non-stationary objectives |
-| Sensitive to Hyperparameters | β and α must be tuned carefully |
+| Combines Momentum + RMSProp | ✅ |
+| Adaptive Learning Rate | ✅ |
+| Bias Correction | ✅ |
+| Very Popular Optimizer | ✅ |
 
 ---
 
 ### 📉 When to Use
-- **Training is noisy**
-- **Gradients vary a lot in scale**
-- **Want adaptive learning rates automatically**
+- **Almost always** a strong default choice
+- Robust to noisy gradients
+- Works well without much hyperparameter tuning
 
-✅ In practice, RMSProp often speeds up convergence compared to SGD and plain momentum.
+✅ In our scratch experiments, Adam delivered **fast, stable convergence**.
 
 ---
 
-# 📜 Current Optimizer Status
+# 📜 Optimizer Status
 
 | Optimizer | Status |
 |:----------|:-------|
 | SGD (vanilla) | ✅ Implemented |
 | Momentum | ✅ Implemented |
 | RMSProp | ✅ Implemented |
-| Adam | 🔜 Planned |
-
----
-
-✅ As we add more optimizers like **Adam**, they will be documented here with:
-- Update equations
-- Behavior summary
-- Code examples
+| Adam | ✅ Implemented |
 
 ---
 
@@ -225,17 +285,17 @@ Waa    := Waa - α * dWaa / (√s_dWaa + ε)
 ```
 src/
 └── optimizers/
-    ├── optimizer.py           # Base optimizer class
-    ├── sgd_optimizer.py       # SGD optimizer
-    ├── momentum_optimizer.py  # Momentum optimizer
-    ├── rmsprop_optimizer.py   # RMSProp optimizer
-    └── adam_optimizer.py      # (planned)
+    ├── optimizer.py          # Base optimizer class
+    ├── sgd_optimizer.py      # SGD optimizer
+    ├── momentum_optimizer.py # Momentum optimizer
+    ├── rmsprop_optimizer.py  # RMSProp optimizer
+    ├── adam_optimizer.py     # Adam optimizer
 ```
 
 ---
 
 > 💡 **Reminder:**  
-> Our goal is to *learn by doing*, so every optimizer is implemented manually with **NumPy**, no TensorFlow or PyTorch optimizers.
+> Our goal is to *learn by doing*, so every optimizer is implemented manually using **NumPy**, no TensorFlow or PyTorch optimizers.
 
 ---
 
@@ -243,4 +303,3 @@ src/
 - [Coursera NLP Sequence Models](https://www.coursera.org/learn/nlp-sequence-models/home/week/1)
 - [Backpropagation Through Time (BPTT)](https://www.coursera.org/learn/nlp-sequence-models/lecture/bc7ED/backpropagation-through-time)
 - [Improving Deep Neural Networks: Hyperparameter Tuning, Regularization and Optimization](https://www.coursera.org/learn/deep-neural-network)
-
