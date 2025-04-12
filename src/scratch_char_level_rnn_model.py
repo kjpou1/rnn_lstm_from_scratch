@@ -66,6 +66,7 @@ from utils import (
 from optimizers.sgd_optimizer import SGDOptimizer
 from optimizers.momentum_optimizer import MomentumOptimizer
 from optimizers.rmsprop_optimizer import RMSPropOptimizer
+from optimizers.adam_optimizer import AdamOptimizer
 
 
 
@@ -147,6 +148,8 @@ def get_optimizer(name, learning_rate):
         return MomentumOptimizer(learning_rate=learning_rate, momentum=0.9)
     elif name == "rms":
         return RMSPropOptimizer(learning_rate=learning_rate)    
+    elif name == "adam":
+        return AdamOptimizer(learning_rate=learning_rate)    
     else:
         raise ValueError(f"Unsupported optimizer: {name}. Choose from ['sgd']")
 
@@ -261,7 +264,7 @@ if __name__ == "__main__":
     parser.add_argument("--dataset", type=str, default="dinos", help="Dataset name")
     parser.add_argument("--iterations", type=int, default=10000, help="Training steps")
     parser.add_argument("--learning_rate", type=float, default=0.01)
-    parser.add_argument("--optimizer", type=str, default="sgd", choices=["sgd", "momentum", "rms"], help="Optimizer type (default: 'sgd')")
+    parser.add_argument("--optimizer", type=str, default="sgd", choices=["sgd", "momentum", "rms", "adam"], help="Optimizer type (default: 'sgd')")
     parser.add_argument("--temperature", type=float, default=1.0)
     parser.add_argument("--hidden_size", type=int, default=50)
     parser.add_argument("--sample_every", type=int, default=1000)
