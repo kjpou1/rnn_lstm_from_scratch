@@ -1,9 +1,8 @@
-
 # RNN-LSTM-from-Scratch
 
 This project implements character-level **RNNs and LSTMs** **from scratch** using only **NumPy**, alongside **TensorFlow versions** for comparison.
 
-It’s a hands-on deep dive into how **recurrent neural networks** really work under the hood.
+It’s a hands-on deep dive into **how RNNs and LSTMs really work — from first principles.**
 
 ---
 
@@ -12,7 +11,7 @@ It’s a hands-on deep dive into how **recurrent neural networks** really work u
 - Train models to generate text character-by-character
 - Explore **forward and backward passes** (including BPTT)
 - Apply **gradient clipping** to stabilize training
-- Build **custom optimizers** like SGD and RMSProp
+- Build **custom optimizers** (SGD, RMSProp, Adam)
 - Compare **scratch NumPy** vs **TensorFlow** workflows side-by-side
 
 ---
@@ -32,6 +31,7 @@ It’s a hands-on deep dive into how **recurrent neural networks** really work u
   - `tf_char_rnn.py`: TensorFlow model class (`TFCharRNN`)
 
 - `utils.py`: Helper functions: softmax, loss smoothing, random seeds, etc.
+- `optimizers.py`: Custom optimizer implementations (SGD, RMSProp, Adam)
 
 ---
 
@@ -43,7 +43,7 @@ It’s a hands-on deep dive into how **recurrent neural networks** really work u
 
 ---
 
-✅ The TensorFlow versions are **isolated in `tf_char_*` files** and are **NOT** used in scratch RNN training.
+✅ TensorFlow versions (in `tf_char_*` files) are **fully isolated** and **not used** in scratch RNN training.
 
 ✅ This lets you **compare side-by-side**:
 - *From-scratch NumPy workflow* vs *TensorFlow/Keras best practices*  
@@ -64,7 +64,7 @@ It’s a hands-on deep dive into how **recurrent neural networks** really work u
 | Manual training loop | ✅ | ✅ | Complete |
 | Sampling (temperature) | ✅ | ✅ | Complete |
 | LSTM cell            | 🔜 | 🔜 | Coming Soon |
-| Optimizers (SGD, RMSProp, Adam) | 🔜 | ✅ (TensorFlow only) | Partial |
+| Optimizers (SGD, RMSProp, Adam) | ✅ | ✅ | Complete |
 
 ---
 
@@ -82,7 +82,7 @@ rnn-lstm-from-scratch/
 │   ├── tf_char_level_rnn_model.py # TensorFlow model with .fit
 │   ├── tf_char_rnn_manual_train.py # TensorFlow model with manual training
 │   ├── utils.py                  # Softmax, smoothing, random seed, etc.
-│   └── (soon) optimizers.py      # Custom optimizer implementations
+│   ├── optimizers.py             # Custom optimizer implementations
 └── README.md
 ```
 
@@ -92,7 +92,7 @@ rnn-lstm-from-scratch/
 - `dinos.txt` — Dinosaur names
 - `shakespeare.txt` — Shakespeare plays
 
-You can add your own character-level corpus easily!
+You can add your own character-level corpus easily (just drop a `.txt` file into `data/`).
 
 ---
 
@@ -110,7 +110,6 @@ Generated: "Trodonax"
 |:--------|:-------|
 | LSTM Cell from scratch | 🔜 In Progress |
 | GRU Cell from scratch | 🔜 In Progress |
-| SGD, RMSProp, Adam optimizers | 🛠️ Next up |
 | Model checkpointing | ⏳ |
 | Attention mechanism exploration | 🧠 Future |
 
@@ -133,6 +132,7 @@ We are building a true **from-scratch RNN-LSTM lab** 🧪
 - [Coursera NLP Sequence Models](https://www.coursera.org/learn/nlp-sequence-models/home/week/1)
 - [Backpropagation Through Time (BPTT)](https://www.coursera.org/learn/nlp-sequence-models/lecture/bc7ED/backpropagation-through-time)
 - [Improving Deep Neural Networks: Hyperparameter Tuning, Regularization and Optimization](https://www.coursera.org/learn/deep-neural-network)
+
 ---
 
 Happy building 🔁  
