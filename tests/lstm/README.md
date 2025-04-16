@@ -20,3 +20,31 @@ This project includes a comprehensive suite of unit tests to validate the from-s
 - **Some tests use `np.random.seed(42)`** for reproducibility — especially `test_lstm_forward.py` and `generate_lstm_expected.py`.
 - Other tests (e.g. numerical gradient checks or backward validations) may use different seeds or rely on `np.random.seed(...)` explicitly inside the test method.
 - Consistency between forward and backward test values is only guaranteed if the **same seed, shapes, and parameter initializers** are reused.
+
+---
+
+### 🧪 Running the LSTM Unit Tests
+
+To execute the full suite of unit tests for the LSTM model:
+
+```bash
+python -m unittest discover -s tests/lstm
+```
+
+Or to run a specific test module, such as the LSTM forward pass:
+
+```bash
+python -m unittest tests.lstm.test_lstm_forward
+```
+
+> ✅ All tests are designed to run in isolation — no external data dependencies required.
+
+---
+
+### 🧰 Notes
+- You should activate your virtual environment first:
+  ```bash
+  source .venv/bin/activate  # or .venv\Scripts\activate on Windows
+  ```
+- The tests assume NumPy and any required project files are already installed in your environment.
+- Some tests include print/logging output for easier debugging and verification.
