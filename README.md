@@ -65,6 +65,14 @@ Learn how **recurrent neural networks** (RNNs) and **long short-term memory netw
 
 ---
 
+## ✅ LSTM Tests
+
+This repo includes a full from-scratch LSTM implementation with detailed unit tests (forward, backward, gradient check, Keras comparison).
+
+📄 See [`tests/lstm/README.md`](tests/lstm/README.md) for full test breakdown.
+
+---
+
 ## 📂 Project Structure
 ```
 rnn-lstm-from-scratch/

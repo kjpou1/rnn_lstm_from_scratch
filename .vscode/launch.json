@@ -16,10 +16,10 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "Train Dinos",
+      "name": "Train Dinos - Scratch",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/src/train.py",
+      "program": "${workspaceFolder}/src/scratch_char_level_rnn_model.py",
       "console": "integratedTerminal",
       "args": [
         "--dataset",
@@ -31,12 +31,21 @@
       ]
     },
     {
-      "name": "Train Shakespeare",
+      "name": "Train Dinos - Scratch (Batch)",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/src/train.py",
+      "program": "${workspaceFolder}/src/scratch_char_level_rnn_model_batch.py",
       "console": "integratedTerminal",
-      "args": ["--dataset", "shakespeare", "--iterations", "5000"]
+      "args": [
+        "--dataset",
+        "shakespeare",
+        "--epochs",
+        "50",
+        "--batch_size",
+        "64",
+        "--optimizer",
+        "adam"
+      ]
     }
   ]
 }
