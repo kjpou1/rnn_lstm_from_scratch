@@ -129,7 +129,7 @@ def get_optimizer(name, learning_rate):
     if name == "sgd":
         return SGDOptimizer(learning_rate=learning_rate)
     elif name == "momentum":
-        return MomentumOptimizer(learning_rate=learning_rate, momentum=0.9)
+        return MomentumOptimizer(learning_rate=learning_rate, beta=0.5)
     elif name == "rms":
         return RMSPropOptimizer(learning_rate=learning_rate, beta=0.9)
     elif name == "adam":

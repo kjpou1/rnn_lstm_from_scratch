@@ -132,11 +132,11 @@ def get_optimizer(name, learning_rate):
     if name == "sgd":
         return SGDOptimizer(learning_rate=learning_rate)
     elif name == "momentum":
-        return MomentumOptimizer(learning_rate=learning_rate, momentum=0.9)
+        return MomentumOptimizer(learning_rate=learning_rate, beta=0.5)
     elif name == "rms":
-        return RMSPropOptimizer(learning_rate=learning_rate)
+        return RMSPropOptimizer(learning_rate=learning_rate, beta=0.9)
     elif name == "adam":
-        return AdamOptimizer(learning_rate=learning_rate)
+        return AdamOptimizer(learning_rate=learning_rate, beta1=0.9, beta2=0.999)
     else:
         raise ValueError(f"Unsupported optimizer: {name}. Choose from ['sgd']")
 
