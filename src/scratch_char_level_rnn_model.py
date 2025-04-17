@@ -46,13 +46,17 @@ import argparse
 
 import numpy as np
 
+from data_prep import load_dataset
+from optimizers.adam_optimizer import AdamOptimizer
+from optimizers.momentum_optimizer import MomentumOptimizer
+from optimizers.rmsprop_optimizer import RMSPropOptimizer
+from optimizers.sgd_optimizer import SGDOptimizer
 from rnn_model import (
     initialize_rnn_parameters,
     rnn_backward,
+    rnn_cell_step,
     rnn_forward,
-    update_parameters,
 )
-from data_prep import load_dataset
 from tokenizer import CharTokenizer
 from utils import (
     clip,
@@ -63,80 +67,63 @@ from utils import (
     smooth,
     softmax,
 )
-from optimizers.sgd_optimizer import SGDOptimizer
-from optimizers.momentum_optimizer import MomentumOptimizer
-from optimizers.rmsprop_optimizer import RMSPropOptimizer
-from optimizers.adam_optimizer import AdamOptimizer
-
 
 
 def generate_text(
     parameters, tokenizer, start_string="", temperature=1.0, max_length=50, seed=0
 ):
     """
-    Generate text using the trained scratch RNN.
+    Generate text using a manually implemented character-level RNN model.
+
+    This function samples one character at a time using rnn_cell_step().
+    It optionally takes a priming string and temperature scaling for control.
 
     Args:
-        parameters (dict): Trained RNN parameters.
-        tokenizer (CharTokenizer): Tokenizer with vocab mappings.
-        start_string (str): Optional starting string.
-        temperature (float): Sampling randomness factor.
-        max_length (int): Max characters to generate.
+        parameters (dict): Trained RNN parameters from scratch.
+        tokenizer (CharTokenizer): Tokenizer with character-to-index mapping.
+        start_string (str): Text to prime the model with.
+        temperature (float): Temperature scaling for randomness.
+        max_length (int): Max length of the generated sequence.
+        seed (int): Random seed for reproducibility.
 
     Returns:
-        str: The generated text.
+        str: Generated character sequence.
     """
-    Waa, Wax, Wya, by, ba = (
-        parameters["Waa"],
-        parameters["Wax"],
-        parameters["Wya"],
-        parameters["by"],
-        parameters["ba"],
-    )
-    vocab_size = by.shape[0]
-    n_a = Waa.shape[1]
+    vocab_size = parameters["by"].shape[0]
+    n_a = parameters["Waa"].shape[1]
 
-    # Initialize
     x = np.zeros((vocab_size, 1))
     a_prev = np.zeros((n_a, 1))
     generated_indices = []
 
-    # If there is a start string, use it
     if start_string:
         input_indices = tokenizer.texts_to_sequences(start_string)
         for idx in input_indices:
             x = np.zeros((vocab_size, 1))
             x[idx] = 1
-            a_prev = np.tanh(np.dot(Wax, x) + np.dot(Waa, a_prev) + ba)
+            a_prev, _, _ = rnn_cell_step(x, a_prev, parameters)
 
-    # Start generating
     idx = None
     newline_idx = tokenizer.char_to_ix["\n"]
     counter = 0
-    np.random.seed(seed)  # for reproducibility
+    np.random.seed(seed)
 
     while idx != newline_idx and counter < max_length:
-        a_prev = np.tanh(np.dot(Wax, x) + np.dot(Waa, a_prev) + ba)
+        a_prev, y_pred, _ = rnn_cell_step(x, a_prev, parameters)
 
-        # Focus on the last time step's output
-        last_logits = np.dot(Wya, a_prev) + by
+        logits = np.log(y_pred + 1e-9) / temperature
+        probs = softmax(logits)
 
-        # Apply temperature scaling
-        scaled_logits = last_logits / temperature
-        probs = softmax(scaled_logits)
-
-        idx = sample_from_logits(np.log(probs))
+        idx = sample_from_logits(logits)
         generated_indices.append(idx)
 
         x = np.zeros((vocab_size, 1))
         x[idx] = 1
-
         counter += 1
 
-    # Decode back to characters
     generated_text = tokenizer.sequences_to_texts(generated_indices)
-
     return start_string + generated_text
+
 
 def get_optimizer(name, learning_rate):
     """
@@ -147,11 +134,12 @@ def get_optimizer(name, learning_rate):
     elif name == "momentum":
         return MomentumOptimizer(learning_rate=learning_rate, momentum=0.9)
     elif name == "rms":
-        return RMSPropOptimizer(learning_rate=learning_rate)    
+        return RMSPropOptimizer(learning_rate=learning_rate)
     elif name == "adam":
-        return AdamOptimizer(learning_rate=learning_rate)    
+        return AdamOptimizer(learning_rate=learning_rate)
     else:
         raise ValueError(f"Unsupported optimizer: {name}. Choose from ['sgd']")
+
 
 def main(
     dataset_name="dinos",
@@ -166,7 +154,7 @@ def main(
     verbose=False,
 ):
     dino_names = 7  # Number of dinosaur names to print
-    
+
     _, tokenizer, X, Y = load_dataset("dinos", mode="line_by_line", lowercase=True)
 
     X = pad_sequences(X, padding="post")
@@ -184,7 +172,7 @@ def main(
     loss = get_initial_loss(vocab_size, len(X))
     best_loss = float("inf")
 
-    optimizer = get_optimizer(optimizer_name, learning_rate)  
+    optimizer = get_optimizer(optimizer_name, learning_rate)
 
     last_dino_name = "abc"
 
@@ -200,7 +188,6 @@ def main(
         gradients, a = rnn_backward(x_seq, y_seq, parameters, cache)
         gradients = clip(gradients, maxValue=clip_value)
         parameters = optimizer.update(parameters, gradients)
-
 
         # Compute loss
         curr_loss = cross_entropy_loss(y_hat, y_seq)
@@ -264,7 +251,13 @@ if __name__ == "__main__":
     parser.add_argument("--dataset", type=str, default="dinos", help="Dataset name")
     parser.add_argument("--iterations", type=int, default=10000, help="Training steps")
     parser.add_argument("--learning_rate", type=float, default=0.01)
-    parser.add_argument("--optimizer", type=str, default="sgd", choices=["sgd", "momentum", "rms", "adam"], help="Optimizer type (default: 'sgd')")
+    parser.add_argument(
+        "--optimizer",
+        type=str,
+        default="sgd",
+        choices=["sgd", "momentum", "rms", "adam"],
+        help="Optimizer type (default: 'sgd')",
+    )
     parser.add_argument("--temperature", type=float, default=1.0)
     parser.add_argument("--hidden_size", type=int, default=50)
     parser.add_argument("--sample_every", type=int, default=1000)
@@ -282,7 +275,7 @@ if __name__ == "__main__":
         n_a=args.hidden_size,
         num_iterations=args.iterations,
         learning_rate=args.learning_rate,
-        optimizer_name=args.optimizer, 
+        optimizer_name=args.optimizer,
         temperature=args.temperature,
         sample_every=args.sample_every,
         seq_length=args.seq_length,
