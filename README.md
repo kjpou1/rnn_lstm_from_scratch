@@ -161,13 +161,24 @@ This is a **learning-first lab** for anyone who wants to truly understand RNNs a
 
 ---
 
-## 🧠 Learn More
-- [Coursera NLP Sequence Models](https://www.coursera.org/learn/nlp-sequence-models/home/week/1)
-- [Backpropagation Through Time (BPTT)](https://www.coursera.org/learn/nlp-sequence-models/lecture/bc7ED/backpropagation-through-time)
-- [Improving Deep Neural Networks: Hyperparameter Tuning, Regularization and Optimization](https://www.coursera.org/learn/deep-neural-network)
+## 🎓 Learn More
+
+To deepen your understanding of the building blocks behind RNNs and LSTMs:
+
+- 📘 [Neural Networks from Scratch (Book)](https://nnfs.io/) – Great resource for understanding manual backprop, activations, and optimizers from first principles.
+- 🧠 [Coursera NLP Sequence Models](https://www.coursera.org/learn/nlp-sequence-models/home/week/1) – Excellent series covering RNNs, GRUs, LSTMs, and BPTT.
+- 🔄 [Backpropagation Through Time (BPTT)](https://www.coursera.org/learn/nlp-sequence-models/lecture/bc7ED/backpropagation-through-time) – Understand how gradients flow across time steps.
+- 🎯 [Hyperparameter Tuning & Optimization](https://www.coursera.org/learn/deep-neural-network) – For training stability and performance improvements.
+
+> Want to understand how `tanh`, `sigmoid`, and `softmax` really work?  
+> 📂 Check out [`README_ACTIVATIONS.md`](./README_ACTIVATIONS.md) for hand-coded formulas, derivatives, and examples — no magic, just math.
 
 ---
 
 Happy building 🔁  
+
 Let's make it learn 🦖 ➡️ 📝  
+🦖 Train it. 🔁 Backprop it. ✍️ Sample it.  
+Build deep, learn deeper.
+
 Become one with the gradients.

@@ -27,7 +27,9 @@
         "--iterations",
         "22001",
         "--sample_every",
-        "2000"
+        "2000",
+        "--optimizer",
+        "momentum"
       ]
     },
     {
@@ -38,7 +40,7 @@
       "console": "integratedTerminal",
       "args": [
         "--dataset",
-        "shakespeare",
+        "dinos",
         "--epochs",
         "50",
         "--batch_size",

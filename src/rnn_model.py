@@ -1,6 +1,7 @@
 import numpy as np
 
-from utils import softmax
+from activations.softmax import SoftmaxActivation
+from activations.tanh import TanhActivation
 
 
 def initialize_rnn_parameters(n_a, n_x, n_y, seed=1):
@@ -45,17 +46,17 @@ def update_parameters(parameters, gradients, lr):
 
 def rnn_cell_step(x_t, a_prev, parameters):
     """
-    Single forward step of an RNN cell.
+    Single forward step of an RNN cell using modular activations.
 
     Args:
         x_t (ndarray): One-hot input vector at time t (vocab_size, 1)
         a_prev (ndarray): Previous hidden state (n_a, 1)
-        parameters (dict): Model parameters
+        parameters (dict): Dictionary of RNN weights and biases
 
     Returns:
-        a_next (ndarray): Next hidden state
-        y_pred (ndarray): Prediction probabilities
-        cache (tuple): Values for backpropagation
+        a_next (ndarray): Next hidden state (n_a, 1)
+        y_pred (ndarray): Softmax prediction vector (n_y, 1)
+        cache (tuple): Tuple of values needed for backpropagation
     """
     Waa, Wax, Wya, ba, by = (
         parameters["Waa"],
@@ -65,15 +66,22 @@ def rnn_cell_step(x_t, a_prev, parameters):
         parameters["by"],
     )
 
+    # Linear combination before activation (used in both forward and backward passes)
     z = np.dot(Wax, x_t) + np.dot(Waa, a_prev) + ba
-    a_next = np.tanh(z)
 
+    # Hidden state activation (tanh)
+    a_next = TanhActivation.forward(z)
+
+    # Output logits
     z_y = np.dot(Wya, a_next) + by
-    y_pred = softmax(z_y)
 
+    # Prediction via softmax
+    y_pred = SoftmaxActivation.forward(z_y)
+
+    # Cache intermediate results for use in rnn_step_backward
     cache = (a_next, a_prev, x_t, parameters)
 
-    return a_next, y_pred, cache
+    return a_next, y_pred, z, cache
 
 
 def rnn_forward(X, a0, parameters):
@@ -93,6 +101,7 @@ def rnn_forward(X, a0, parameters):
     y_hat = {}
     x = {}
     a[-1] = np.copy(a0)
+    z_t = []
 
     for t, idx in enumerate(X):
         x_t = np.zeros((vocab_size, 1))
@@ -100,9 +109,10 @@ def rnn_forward(X, a0, parameters):
             x_t[idx] = 1
         x[t] = x_t
 
-        a[t], y_hat[t], _ = rnn_cell_step(x[t], a[t - 1], parameters)
+        a[t], y_hat[t], z, _ = rnn_cell_step(x[t], a[t - 1], parameters)
+        z_t.append(z)
 
-    return y_hat, a, x
+    return y_hat, a, x, z_t
 
 
 def rnn_step_backward(dy, da_next, cache):
@@ -110,32 +120,42 @@ def rnn_step_backward(dy, da_next, cache):
     Single backward step of an RNN cell.
 
     Args:
-        dy (ndarray): Gradient of loss w.r.t. softmax output
-        da_next (ndarray): Gradient from next hidden state
-        cache (tuple): (a_next, a_prev, x_t, parameters)
+        dy (ndarray): Gradient of loss w.r.t. softmax output (n_y, 1)
+        da_next (ndarray): Gradient of loss w.r.t. next hidden state (n_a, 1)
+        cache (tuple): Values from forward pass (a_next, a_prev, x_t, z, parameters)
 
     Returns:
-        grads (dict): Gradients for parameters
-        da_prev (ndarray): Gradient to pass back
+        grads (dict): Gradients for Wax, Waa, Wya, ba, by
+        da_prev (ndarray): Gradient to be passed back to previous cell
     """
-    (a_next, a_prev, x_t, parameters) = cache
+    (a_next, a_prev, x_t, z_t, parameters) = cache
     Waa, Wax, Wya = parameters["Waa"], parameters["Wax"], parameters["Wya"]
 
-    # Output gradients
-    dWya = np.dot(dy, a_next.T)
-    dby = dy
+    # Gradients for output layer
+    dWya = np.dot(dy, a_next.T)  # ∂L/∂Wya = dy · a_nextᵀ
+    dby = dy  # ∂L/∂by = dy
 
-    # Hidden gradients
+    # Total gradient flowing into tanh from output and future timestep
     da = np.dot(Wya.T, dy) + da_next
-    daraw = (1 - np.square(a_next)) * da
 
-    dWax = np.dot(daraw, x_t.T)
-    dWaa = np.dot(daraw, a_prev.T)
-    dba = daraw
+    # Backprop through tanh activation
+    dz = TanhActivation.backward(z_t) * da  # ∂L/∂z = ∂L/∂a * ∂a/∂z
 
-    da_prev = np.dot(Waa.T, daraw)
+    # Gradients for input and hidden weights
+    dWax = np.dot(dz, x_t.T)  # ∂L/∂Wax = dz · x_tᵀ
+    dWaa = np.dot(dz, a_prev.T)  # ∂L/∂Waa = dz · a_prevᵀ
+    dba = dz  # ∂L/∂ba = dz
 
-    grads = {"dWax": dWax, "dWaa": dWaa, "dWya": dWya, "dba": dba, "dby": dby}
+    # Gradient w.r.t. previous hidden state
+    da_prev = np.dot(Waa.T, dz)  # ∂L/∂a_prev = Waaᵀ · dz
+
+    grads = {
+        "dWax": dWax,
+        "dWaa": dWaa,
+        "dWya": dWya,
+        "dba": dba,
+        "dby": dby,
+    }
 
     return grads, da_prev
 
@@ -154,7 +174,7 @@ def rnn_backward(X, Y, parameters, cache):
         gradients (dict): Gradients w.r.t parameters
         a (dict): Hidden states
     """
-    y_hat, a, x = cache
+    y_hat, a, x, z_t = cache
     vocab_size = parameters["Wax"].shape[1]
     n_a = parameters["Waa"].shape[0]
 
@@ -173,7 +193,7 @@ def rnn_backward(X, Y, parameters, cache):
         dy = np.copy(y_hat[t])
         dy[Y[t]] -= 1  # Derivative of cross-entropy loss w.r.t softmax output
 
-        cache_t = (a[t], a[t - 1], x[t], parameters)
+        cache_t = (a[t], a[t - 1], x[t], z_t[t], parameters)
         step_grads, da_next = rnn_step_backward(dy, da_next, cache_t)
 
         for key in gradients.keys():

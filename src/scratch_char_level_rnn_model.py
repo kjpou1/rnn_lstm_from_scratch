@@ -101,7 +101,7 @@ def generate_text(
         for idx in input_indices:
             x = np.zeros((vocab_size, 1))
             x[idx] = 1
-            a_prev, _, _ = rnn_cell_step(x, a_prev, parameters)
+            a_prev, *_ = rnn_cell_step(x, a_prev, parameters)
 
     idx = None
     newline_idx = tokenizer.char_to_ix["\n"]
@@ -109,7 +109,7 @@ def generate_text(
     np.random.seed(seed)
 
     while idx != newline_idx and counter < max_length:
-        a_prev, y_pred, _ = rnn_cell_step(x, a_prev, parameters)
+        a_prev, y_pred, *_ = rnn_cell_step(x, a_prev, parameters)
 
         logits = np.log(y_pred + 1e-9) / temperature
         probs = softmax(logits)
