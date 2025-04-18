@@ -171,7 +171,7 @@ To deepen your understanding of the building blocks behind RNNs and LSTMs:
 - 🎯 [Hyperparameter Tuning & Optimization](https://www.coursera.org/learn/deep-neural-network) – For training stability and performance improvements.
 
 > Want to understand how `tanh`, `sigmoid`, and `softmax` really work?  
-> 📂 Check out [`README_ACTIVATIONS.md`](./README_ACTIVATIONS.md) for hand-coded formulas, derivatives, and examples — no magic, just math.
+> 📂 Check out [`README_ACTIVATION.md`](./README_ACTIVATION.md) for hand-coded formulas, derivatives, and examples — no magic, just math.
 
 ---
 
