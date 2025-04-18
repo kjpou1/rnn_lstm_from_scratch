@@ -46,6 +46,53 @@ To support manual backpropagation, each activation defines:
 
 ---
 
+Perfect direction. Here’s a concise, informative block you can add to your `README_ACTIVATIONS.md` — ideally right after the **"Why Separate `forward()` and `backward()`?"** section or just before the **"Supported Activations"** table:
+
+---
+
+### 🔄 Forward–Backward Caching (and Why We Use It)
+
+In this project, each activation function computes its **derivative using the output from its forward pass**. That means during training:
+
+```python
+# Forward pass
+a = SigmoidActivation.forward(z)
+
+# Backward pass
+dz = da * SigmoidActivation.backward(a)  # NOT passing z
+```
+
+This is a **conscious design decision** made for clarity and modularity.
+
+> 💡 Rather than mixing activation logic with hidden state or class-level storage, we favor **explicit data flow**: forward results must be saved and passed to backward. It’s simple, transparent, and avoids surprises.
+
+---
+
+### 📚 Comparison to NNFS (Neural Networks from Scratch)
+
+The book **NNFS** uses class-based activations that **store internal state** (like `self.output`) across the forward and backward phases:
+
+```python
+class Activation_Sigmoid:
+    def forward(self, inputs):
+        self.output = 1 / (1 + np.exp(-inputs))
+
+    def backward(self, dvalues):
+        self.dinputs = dvalues * self.output * (1 - self.output)
+```
+
+While that design supports clean encapsulation, it can obscure intermediate computations when debugging or learning.
+
+In contrast, this project uses:
+- Stateless `@staticmethod` functions  
+- Clear data ownership — the caller is responsible for saving intermediate values  
+- No hidden state or side-effects
+
+This is in line with our educational goal:  
+✅ *See exactly what’s flowing forward and backward — every step, every value.*
+
+---
+
 ## ✅ Supported Activations
 
 | Activation | Class Name         | Forward Function                  | Derivative (`backward()`)                    |

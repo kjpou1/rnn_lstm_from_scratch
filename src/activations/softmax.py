@@ -38,19 +38,26 @@ class SoftmaxActivation(BaseActivation):
         return exp_x / np.sum(exp_x)
 
     @staticmethod
-    def backward(x: np.ndarray) -> np.ndarray:
+    def backward(s: np.ndarray) -> np.ndarray:
         """
-        Compute the Jacobian matrix of softmax at x.
+        Compute the Jacobian matrix of the softmax output.
 
         Args:
-            x (ndarray): Same input as used in forward(x)
+            s (ndarray): Softmax probabilities (output from forward), shape (n,) or (n,1)
 
         Returns:
-            ndarray: Jacobian matrix of softmax (n, n)
+            ndarray: Jacobian matrix of shape (n, n)
 
         Note:
-            Only needed if doing full Jacobian backprop.
-            In practice, most use dL/dz = y_pred - y_true for softmax + cross-entropy.
+            The Jacobian J of the softmax function is:
+
+                J_ij = s_i * (δ_ij - s_j)
+
+            For most classification tasks, you can skip this and use:
+
+                ∇L = y_pred - y_true
+
+            when using softmax with cross-entropy loss.
         """
-        s = SoftmaxActivation.forward(x).reshape(-1, 1)
+        s = s.reshape(-1, 1)  # Ensure column vector
         return np.diagflat(s) - np.dot(s, s.T)
