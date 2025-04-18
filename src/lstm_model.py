@@ -57,14 +57,16 @@ def lstm_cell_step(xt, a_prev, c_prev, parameters):
     ft = SigmoidActivation.forward(zf)  # Forget gate
     zi = np.dot(Wi, concat) + bi  # Input gate
     it = SigmoidActivation.forward(zi)  # Input gate
-    cct = np.tanh(np.dot(Wc, concat) + bc)  # Candidate cell state
+    cctf = np.dot(Wc, concat) + bc  # Candidate cell state
+    cct = TanhActivation.forward(cctf)  # Candidate cell state
     c_next = ft * c_prev + it * cct  # Final cell state
     zo = np.dot(Wo, concat) + bo  # Output gate
     ot = SigmoidActivation.forward(zo)  # Output gate
-    a_next = ot * np.tanh(c_next)  # Hidden state
+    a_next = ot * TanhActivation.forward(c_next)  # Hidden state
 
     # Compute prediction
-    yt_pred = softmax(np.dot(Wy, a_next) + by)  # Output (softmax)
+    logits = np.dot(Wy, a_next) + by  # Linear output
+    yt_pred = SoftmaxActivation.forward(logits)  # Output (softmax)
 
     # Store cache for backward
     cache = (a_next, c_next, a_prev, c_prev, ft, it, cct, ot, xt, parameters)
@@ -149,8 +151,8 @@ def lstm_step_backward(da_next, dc_next, cache):
     n_a, _ = a_next.shape
 
     # Compute derivatives for gate outputs (Equations 7–10)
-    tanh_c_next = np.tanh(c_next)
-    dtanh_c_next = 1 - tanh_c_next**2
+    tanh_c_next = TanhActivation.forward(c_next)
+    dtanh_c_next = TanhActivation.backward(c_next)
 
     # Equation (7): ∂L/∂γ_o
     dot = da_next * tanh_c_next * SigmoidActivation.backward(ot)
@@ -159,7 +161,7 @@ def lstm_step_backward(da_next, dc_next, cache):
     dc_combined = dc_next + da_next * ot * dtanh_c_next
 
     # Equation (8): ∂L/∂c̃
-    dcct = dc_combined * it * (1 - cct**2)
+    dcct = dc_combined * it * TanhActivation.backward(cct)
 
     # Equation (9): ∂L/∂γ_i
     dit = dc_combined * cct * SigmoidActivation.backward(it)

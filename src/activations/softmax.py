@@ -35,7 +35,7 @@ class SoftmaxActivation(BaseActivation):
         """
         x = x - np.max(x)  # for numerical stability
         exp_x = np.exp(x)
-        return exp_x / np.sum(exp_x)
+        return exp_x / np.sum(exp_x, axis=0)
 
     @staticmethod
     def backward(s: np.ndarray) -> np.ndarray:
