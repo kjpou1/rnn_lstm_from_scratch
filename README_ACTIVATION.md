@@ -46,10 +46,6 @@ To support manual backpropagation, each activation defines:
 
 ---
 
-Perfect direction. Here’s a concise, informative block you can add to your `README_ACTIVATIONS.md` — ideally right after the **"Why Separate `forward()` and `backward()`?"** section or just before the **"Supported Activations"** table:
-
----
-
 ### 🔄 Forward–Backward Caching (and Why We Use It)
 
 In this project, each activation function computes its **derivative using the output from its forward pass**. That means during training:
