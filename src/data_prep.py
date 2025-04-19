@@ -1,11 +1,15 @@
 import os
+
 import numpy as np
-from tokenizer import CharTokenizer
+
+from .tokenizer import CharTokenizer
+
 
 def load_text(path):
     """Reads a text file and returns the full corpus string."""
     with open(path, "r", encoding="utf-8") as f:
         return f.read()
+
 
 def one_hot_encode(sequence, vocab_size):
     """One-hot encodes a sequence of indices."""
@@ -14,6 +18,7 @@ def one_hot_encode(sequence, vocab_size):
     for t, idx in enumerate(sequence):
         one_hot[idx, t] = 1
     return one_hot
+
 
 def create_training_sequences_continuous(corpus, tokenizer, seq_length=25):
     """
@@ -25,6 +30,7 @@ def create_training_sequences_continuous(corpus, tokenizer, seq_length=25):
         X.append(encoded[i : i + seq_length])
         Y.append(encoded[i + 1 : i + seq_length + 1])
     return np.array(X), np.array(Y)
+
 
 def create_training_sequences_line_by_line(lines, tokenizer):
     """
@@ -46,6 +52,7 @@ def create_training_sequences_line_by_line(lines, tokenizer):
         X.append(seq)
         Y.append(seq[1:] + [newline_ix])  # shift and add newline token
     return np.array(X, dtype=object), np.array(Y, dtype=object)
+
 
 def load_dataset(name, mode="continuous", seq_length=25, lowercase=True):
     """
@@ -88,8 +95,9 @@ def load_dataset(name, mode="continuous", seq_length=25, lowercase=True):
 
     return corpus, tokenizer, X, Y
 
+
 if __name__ == "__main__":
-    dataset_name = "dinos" 
+    dataset_name = "dinos"
     # or dataset_name = "shakespeare"
     mode = "line_by_line" if dataset_name == "dinos" else "continuous"
 
