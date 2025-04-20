@@ -122,49 +122,18 @@ This repo includes a full from-scratch LSTM implementation with detailed unit te
 
 ---
 
-## 📂 Project Structure
-```
-rnn-lstm-from-scratch/
-├── data/
-│   ├── images/                   # Images for visualizations
-│   ├── dinos.txt                  # Dinosaur name corpus
-│   └── shakespeare.txt            # Shakespeare plays corpus
-│
-├── src/
-│   ├── optimizers/                # Custom optimizers
-│   │   ├── __init__.py
-│   │   ├── adam_optimizer.py
-│   │   ├── momentum_optimizer.py
-│   │   ├── optimizer.py           # Base optimizer class
-│   │   ├── rmsprop_optimizer.py
-│   │   └── sgd_optimizer.py
-│   │
-│   ├── __init__.py
-│   ├── char_level_rnn_model.py    # Character-level RNN (NumPy)
-│   ├── data_prep.py               # Dataset loading and preparation
-│   ├── rnn_model.py               # Scratch RNN core (forward, backward)
-│   ├── scratch_char_level_rnn_model_batch.py  # Scratch trainer (mini-batch)
-│   ├── scratch_char_level_rnn_model.py        # Scratch trainer (single example)
-│   ├── text_dataset.py            # Text dataset utilities
-│   ├── tf_char_level_rnn_model.py # TensorFlow model with .fit
-│   ├── tf_char_rnn_manual_train.py # TensorFlow manual training loop
-│   ├── tf_char_rnn.py             # TensorFlow RNN model class
-│   ├── tokenizer.py               # CharTokenizer
-│   └── utils.py                   # Helper functions (softmax, loss smoothing, etc.)
-│
-├── tests/
-│   ├── optimizers/
-│   │   ├── test_adam_optimizer.py
-│   │   ├── test_momentum_optimizer.py
-│   │   ├── test_rmsprop_optimizer.py
-│   │   └── test_sgd_optimizer.py
-│
-├── .gitignore
-├── LICENSE
-├── README.md
-├── README_OPTIMIZER.md            # Optimizer-specific documentation
-├── requirements.txt
-```
+## 📁 Project Layout
+
+- `src/` — Core training and model code (NumPy + TensorFlow)
+  - `rnn_model.py`, `data_prep.py`, `tokenizer.py`, `utils.py`
+  - `scratch_*.py` (from-scratch trainers)
+  - `tf_*.py` (TensorFlow trainers)
+  - `activations/` — Hand-coded activation functions 🔬
+  - `optimizers/` — Custom SGD, Momentum, RMSProp, Adam 💡
+
+- `tests/` — Unit tests for RNN, LSTM, optimizers, and sampling
+- `data/` — Datasets like `dinos.txt`, `shakespeare.txt`
+- `README_ACTIVATION.md`, `README_OPTIMIZER.md` — Docs for custom components
 
 ---
 
