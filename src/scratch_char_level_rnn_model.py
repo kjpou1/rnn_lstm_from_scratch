@@ -46,19 +46,19 @@ import argparse
 
 import numpy as np
 
-from data_prep import load_dataset
-from optimizers.adam_optimizer import AdamOptimizer
-from optimizers.momentum_optimizer import MomentumOptimizer
-from optimizers.rmsprop_optimizer import RMSPropOptimizer
-from optimizers.sgd_optimizer import SGDOptimizer
-from rnn_model import (
+from .data_prep import load_dataset
+from .optimizers.adam_optimizer import AdamOptimizer
+from .optimizers.momentum_optimizer import MomentumOptimizer
+from .optimizers.rmsprop_optimizer import RMSPropOptimizer
+from .optimizers.sgd_optimizer import SGDOptimizer
+from .rnn_model import (
     initialize_rnn_parameters,
     rnn_backward,
     rnn_cell_step,
     rnn_forward,
 )
-from tokenizer import CharTokenizer
-from utils import (
+from .tokenizer import CharTokenizer
+from .utils import (
     clip,
     cross_entropy_loss,
     get_initial_loss,
@@ -109,12 +109,12 @@ def generate_text(
     np.random.seed(seed)
 
     while idx != newline_idx and counter < max_length:
-        a_prev, y_pred, *_ = rnn_cell_step(x, a_prev, parameters)
+        a_prev, logits, *_ = rnn_cell_step(x, a_prev, parameters)
 
-        logits = np.log(y_pred + 1e-9) / temperature
-        probs = softmax(logits)
+        scaled_logits = logits / temperature
+        probs = softmax(scaled_logits)
 
-        idx = sample_from_logits(logits)
+        idx = sample_from_logits(scaled_logits)
         generated_indices.append(idx)
 
         x = np.zeros((vocab_size, 1))
@@ -183,15 +183,16 @@ def main(
 
         # Forward, backward, optimize
         cache = rnn_forward(x_seq, a_prev, parameters)
-        y_hat, *_ = cache
+        _, _, logits, _ = cache  # z_t shape: (vocab_size, T_x)
 
+        # Compute loss directly on logits (like from_logits=True)
+        curr_loss = cross_entropy_loss(logits, y_seq)
+        loss = smooth(loss, curr_loss)
+
+        # Backward and update
         gradients, a = rnn_backward(x_seq, y_seq, parameters, cache)
         gradients = clip(gradients, maxValue=clip_value)
         parameters = optimizer.update(parameters, gradients)
-
-        # Compute loss
-        curr_loss = cross_entropy_loss(y_hat, y_seq)
-        loss = smooth(loss, curr_loss)
 
         if curr_loss < best_loss:
             best_loss = curr_loss
