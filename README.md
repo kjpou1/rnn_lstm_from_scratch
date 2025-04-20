@@ -219,9 +219,20 @@ PYTHONPATH=. python -m src.scratch_char_level_rnn_model_batch
 ## ✍️ Example Output
 After training on dinosaur names:
 ```
-Generated: "Brontosaurus"
-Generated: "Stegoceratops"
-Generated: "Trodonax"
+--- Generating samples:
+Tonisaurus
+
+Opandeniaurus
+
+Onosaurus
+
+Tonisaurus
+
+Yptops
+
+Eunthus
+
+Yosaurus
 ```
 
 ---
