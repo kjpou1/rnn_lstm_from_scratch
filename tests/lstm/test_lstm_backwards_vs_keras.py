@@ -5,7 +5,11 @@ import tensorflow as tf
 from tensorflow.keras.layers import LSTM, Input
 from tensorflow.keras.models import Model
 
-from src.lstm_model import initialize_lstm_parameters, lstm_backwards, lstm_forward
+from src.models.lstm_model import (
+    initialize_lstm_parameters,
+    lstm_backwards,
+    lstm_forward,
+)
 from src.utils import softmax
 
 

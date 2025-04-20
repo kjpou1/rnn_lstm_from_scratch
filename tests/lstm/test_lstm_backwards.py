@@ -2,7 +2,11 @@ import unittest
 
 import numpy as np
 
-from src.lstm_model import initialize_lstm_parameters, lstm_backwards, lstm_forward
+from src.models.lstm_model import (
+    initialize_lstm_parameters,
+    lstm_backwards,
+    lstm_forward,
+)
 
 
 class TestLSTMBackwards(unittest.TestCase):
@@ -60,7 +64,7 @@ class TestLSTMBackwards(unittest.TestCase):
         Compare gradients from full-sequence lstm_backwards
         with manually accumulated lstm_step_backward calls.
         """
-        from src.lstm_model import lstm_step_backward
+        from src.models.lstm_model import lstm_step_backward
 
         grads_seq = lstm_backwards(self.da, (self.caches, self.x))
 

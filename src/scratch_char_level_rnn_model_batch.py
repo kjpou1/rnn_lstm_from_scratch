@@ -20,16 +20,16 @@ import numpy as np
 from src.sampling import generate_text
 
 from .data_prep import load_dataset
-from .optimizers.adam_optimizer import AdamOptimizer
-from .optimizers.momentum_optimizer import MomentumOptimizer
-from .optimizers.rmsprop_optimizer import RMSPropOptimizer
-from .optimizers.sgd_optimizer import SGDOptimizer
-from .rnn_model import (
+from .models.rnn_model import (
     initialize_rnn_parameters,
     rnn_backward,
     rnn_cell_step,
     rnn_forward,
 )
+from .optimizers.adam_optimizer import AdamOptimizer
+from .optimizers.momentum_optimizer import MomentumOptimizer
+from .optimizers.rmsprop_optimizer import RMSPropOptimizer
+from .optimizers.sgd_optimizer import SGDOptimizer
 from .tokenizer import CharTokenizer
 from .utils import (
     clip,

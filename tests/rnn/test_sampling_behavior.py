@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from src.rnn_model import initialize_rnn_parameters
+from src.models.rnn_model import initialize_rnn_parameters
 from src.sampling import generate_text
 from src.tokenizer import CharTokenizer
 

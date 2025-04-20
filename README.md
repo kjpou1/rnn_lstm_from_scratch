@@ -13,7 +13,7 @@ Learn how **recurrent neural networks** (RNNs) and **long short-term memory netw
   - [🚀 Why This Project?](#-why-this-project)
   - [🎯 Project Philosophy](#-project-philosophy)
   - [🧠 What's Inside](#-whats-inside)
-    - [✅ Core Features](#-core-features)
+    - [✅ Core Features (NumPy)](#-core-features-numpy)
     - [🧪 Training Scripts](#-training-scripts)
     - [⚙️ Optimization](#️-optimization)
   - [🤖 Two Ways to Train](#-two-ways-to-train)
@@ -58,11 +58,12 @@ Our goal is to **learn by building**, not just by using. That means stepping awa
 
 ## 🧠 What's Inside
 
-### ✅ Core Features
+### ✅ Core Features (NumPy)
 - `CharTokenizer`: Maps characters ↔️ indices (with OOV support)
 - `data_prep.py`: Load text data and create training sequences
-- `rnn_model.py`: RNN core logic (forward, backward, sampling, logits-based loss)
 - `utils.py`: Utility functions like `softmax`, loss smoothing, sequence padding, clipping
+- `models/rnn_model.py`: RNN core logic (forward, backward, logits-based loss)
+- `models/lstm_model.py`: LSTM core logic (forward, backward)
 - `activations/`: Custom activation functions (`tanh`, `sigmoid`, `softmax`)  
   📄 See [`README_ACTIVATION.md`](README_ACTIVATION.md) for math, gradients, and usage.
 
@@ -163,7 +164,9 @@ This repo includes a from-scratch LSTM implementation with detailed unit tests f
 ## 📁 Project Layout
 
 - `src/` — Core training and model code (NumPy + TensorFlow)
-  - `rnn_model.py`, `data_prep.py`, `tokenizer.py`, `utils.py`
+  - `models/` — From-scratch model logic
+    - `rnn_model.py`, `lstm_model.py`
+  - `data_prep.py`, `tokenizer.py`, `utils.py`, `sampling.py`
   - `scratch_*.py` (from-scratch trainers)
   - `tf_*.py` (TensorFlow trainers)
   - `activations/` — Hand-coded activation functions 🔬

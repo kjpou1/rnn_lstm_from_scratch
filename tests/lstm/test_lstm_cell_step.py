@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from src.lstm_model import lstm_cell_step  # adjust path if needed
+from src.models.lstm_model import lstm_cell_step  # adjust path if needed
 
 
 class TestLSTMCellStep(unittest.TestCase):

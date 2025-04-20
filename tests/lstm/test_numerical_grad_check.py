@@ -17,7 +17,11 @@ import unittest
 
 import numpy as np
 
-from src.lstm_model import initialize_lstm_parameters, lstm_backwards, lstm_forward
+from src.models.lstm_model import (
+    initialize_lstm_parameters,
+    lstm_backwards,
+    lstm_forward,
+)
 
 
 def compute_loss(a, da):

@@ -5,7 +5,7 @@ import tensorflow as tf
 from tensorflow.keras.layers import Activation, Dense, Input, SimpleRNN
 from tensorflow.keras.models import Model
 
-from src.rnn_model import initialize_rnn_parameters, rnn_backward, rnn_forward
+from src.models.rnn_model import initialize_rnn_parameters, rnn_backward, rnn_forward
 
 
 def print_matrix_diff(mat1, mat2, name="Matrix"):

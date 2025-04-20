@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from src.rnn_model import initialize_rnn_parameters, rnn_backward, rnn_forward
+from src.models.rnn_model import initialize_rnn_parameters, rnn_backward, rnn_forward
 
 
 class TestRNNBackwards(unittest.TestCase):

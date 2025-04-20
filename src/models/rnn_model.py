@@ -1,7 +1,7 @@
 import numpy as np
 
-from .activations.softmax import SoftmaxActivation
-from .activations.tanh import TanhActivation
+from ..activations.softmax import SoftmaxActivation
+from ..activations.tanh import TanhActivation
 
 
 def initialize_rnn_parameters(n_a, n_x, n_y, seed=1):

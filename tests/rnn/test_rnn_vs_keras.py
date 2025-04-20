@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.layers import Dense, SimpleRNNCell
 
-from src.rnn_model import rnn_cell_step
+from src.models.rnn_model import rnn_cell_step
 from src.utils import softmax
 
 

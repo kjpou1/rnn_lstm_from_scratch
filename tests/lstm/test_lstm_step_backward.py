@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from src.lstm_model import (
+from src.models.lstm_model import (
     initialize_lstm_parameters,
     lstm_cell_step,
     lstm_step_backward,

@@ -14,7 +14,7 @@
 
 import numpy as np
 
-from src.lstm_model import initialize_lstm_parameters, lstm_forward
+from src.models.lstm_model import initialize_lstm_parameters, lstm_forward
 
 # 🔒 Set random seed for reproducibility — MUST match the unit test exactly
 np.random.seed(42)

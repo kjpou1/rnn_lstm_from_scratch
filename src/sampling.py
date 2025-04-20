@@ -3,7 +3,7 @@
 
 import numpy as np
 
-from src.rnn_model import rnn_cell_step
+from src.models.rnn_model import rnn_cell_step
 from src.utils import sample_from_logits, softmax
 
 

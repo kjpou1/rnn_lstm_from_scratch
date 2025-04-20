@@ -15,7 +15,7 @@ import random
 
 import numpy as np
 
-from rnn_model import (
+from src.models.rnn_model import (
     initialize_rnn_parameters,
     rnn_backward,
     rnn_forward,
