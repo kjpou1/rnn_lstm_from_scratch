@@ -100,25 +100,31 @@ It helps us better debug gradients, align with frameworks, and prepare for deepe
 
 ---
 
-## ✅ RNN Tests
+## ✅ Tests
 
-The RNN modules are backed by a comprehensive set of unit tests to ensure correctness in both forward and backward passes.
+### 🔁 RNN Tests
 
-- 🔁 Validates `rnn_cell_step()`, `rnn_forward()`  and `rnn_backward()` against Keras
-- 🎯 Compares gradients with `GradientTape` for numerical alignment
-- 📉 Confirms training loss decreases over time
-- 🧪 Checks sampling behavior, sequence length, and vocabulary coverage
+The RNN implementation is backed by a comprehensive test suite to ensure forward and backward logic are both mathematically correct and consistent with TensorFlow.
 
-📄 See [`tests/rnn/README.md`](tests/rnn/README.md) for the full suite. All tests are deterministic and self-contained.
+- ✅ Validates `rnn_cell_step()`, `rnn_forward()`, and `rnn_backward()` end-to-end
+- 🔬 Compares gradients with Keras using `GradientTape`
+- 📉 Confirms loss decreases over synthetic training loops
+- 🧪 Tests sampling output: sequence length, vocab conformity, temperature effects
+
+📄 See [`tests/rnn/README.md`](tests/rnn/README.md) for a full breakdown.  
+All tests are deterministic, self-contained, and require **no external data**.
 
 ---
 
+### 🧠 LSTM Tests
 
-## ✅ LSTM Tests
+This repo includes a from-scratch LSTM implementation with detailed unit tests for:
 
-This repo includes a full from-scratch LSTM implementation with detailed unit tests (forward, backward, gradient check, Keras comparison).
+- Forward/backward cell logic
+- Gradient shape and value correctness
+- Cross-validation against Keras `LSTMCell`
 
-📄 See [`tests/lstm/README.md`](tests/lstm/README.md) for full test breakdown.
+📄 Full breakdown in [`tests/lstm/README.md`](tests/lstm/README.md)
 
 ---
 
