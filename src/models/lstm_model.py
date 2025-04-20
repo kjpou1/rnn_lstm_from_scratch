@@ -66,12 +66,11 @@ def lstm_cell_step(xt, a_prev, c_prev, parameters):
 
     # Compute prediction
     logits = np.dot(Wy, a_next) + by  # Linear output
-    yt_pred = SoftmaxActivation.forward(logits)  # Output (softmax)
 
     # Store cache for backward
     cache = (a_next, c_next, a_prev, c_prev, ft, it, cct, ot, xt, parameters)
 
-    return a_next, c_next, yt_pred, cache
+    return a_next, c_next, logits, cache
 
 
 def lstm_forward(x, a0, parameters):
@@ -97,7 +96,7 @@ def lstm_forward(x, a0, parameters):
     # Initialize outputs
     a = np.zeros((n_a, m, T_x))
     c = np.zeros((n_a, m, T_x))
-    y = np.zeros((n_y, m, T_x))
+    logits = np.zeros((n_y, m, T_x))
 
     # Initialize a_next and c_next
     a_next = a0
@@ -106,16 +105,16 @@ def lstm_forward(x, a0, parameters):
     for t in range(T_x):
         xt = x[:, :, t]  # Slice x at time step t → shape (n_x, m)
 
-        a_next, c_next, yt_pred, cache = lstm_cell_step(xt, a_next, c_next, parameters)
+        a_next, c_next, logits_t, cache = lstm_cell_step(xt, a_next, c_next, parameters)
 
         # Store into output tensors
         a[:, :, t] = a_next
         c[:, :, t] = c_next
-        y[:, :, t] = yt_pred
+        logits[:, :, t] = logits_t
 
         caches.append(cache)
 
-    return a, y, caches
+    return a, logits, caches
 
 
 def lstm_step_backward(da_next, dc_next, cache):

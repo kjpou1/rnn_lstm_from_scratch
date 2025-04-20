@@ -4,6 +4,7 @@ import unittest
 import numpy as np
 
 from src.models.lstm_model import initialize_lstm_parameters, lstm_forward
+from src.utils import softmax
 
 
 class TestLSTMForward(unittest.TestCase):
@@ -49,25 +50,30 @@ class TestLSTMForward(unittest.TestCase):
         print("✔️ Passed shape check")
 
     def test_lstm_forward_values(self):
-        print("\n🔍 Validating LSTM final outputs...")
+        x = self.x  # shape (n_x, m, T_x)
+        a0 = self.a0
+
+        a, y_logits, _ = lstm_forward(x, a0, self.parameters)
+
+        # Apply softmax to logits
+        y_softmax = softmax(y_logits)  # shape (n_y, m, T_x)
+
+        # Check only the final time step
+        actual = y_softmax[:, :, -1]
+        expected = self.expected_y_final  # This contains softmaxed values
+
+        print("🔍 Validating LSTM final outputs...")
         print("🔹 Final a[:, :, -1]:")
-        print(np.round(self.a[:, :, -1], 7))
+        print(a[:, :, -1])
         print("🔹 Final y[:, :, -1]:")
-        print(np.round(self.y[:, :, -1], 7))
+        print(actual)
 
         np.testing.assert_almost_equal(
-            self.a[:, :, -1],
-            self.expected_a_final,
-            decimal=6,
-            err_msg="Mismatch in final hidden state a[:, :, -1]",
-        )
-        np.testing.assert_almost_equal(
-            self.y[:, :, -1],
-            self.expected_y_final,
+            actual,
+            expected,
             decimal=6,
             err_msg="Mismatch in final prediction y[:, :, -1]",
         )
-        print("✔️ Final values match expected")
 
     def test_lstm_forward_hidden_state_elementwise(self):
         print("\n🔎 Detailed elementwise comparison for a[:, :, -1]")
@@ -93,6 +99,34 @@ class TestLSTMForward(unittest.TestCase):
             total_mismatches,
             0,
             f"Total mismatches in final hidden state: {total_mismatches}",
+        )
+
+    def test_lstm_forward_logits_values(self):
+        print("\n🧪 Validating raw logits (pre-softmax)...")
+
+        # Re-run forward to get fresh logits
+        _, y_logits, _ = lstm_forward(self.x, self.a0, self.parameters)
+
+        # Optionally print a few logits
+        print("🔹 Sample y_logits[:, :, -1]:")
+        print(y_logits[:, :, -1])
+
+        # You’d normally load this from a saved baseline
+        expected_logits_final = np.array(
+            [
+                [-5.772609e-05, -3.485518e-06, 1.269895e-05, -3.983827e-05],
+                [3.446221e-04, 6.963469e-05, -1.702238e-05, 1.215405e-04],
+            ]
+        )
+
+        actual = y_logits[:, :, -1]
+        expected = expected_logits_final
+
+        np.testing.assert_almost_equal(
+            actual,
+            expected,
+            decimal=6,
+            err_msg="Mismatch in raw logits y[:, :, -1]",
         )
 
 

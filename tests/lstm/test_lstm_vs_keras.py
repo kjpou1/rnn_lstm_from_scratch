@@ -4,7 +4,8 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.layers import Dense, LSTMCell
 
-from src.models.lstm_model import lstm_cell_step  # Your from-scratch version
+from src.models.lstm_model import lstm_cell_step
+from src.utils import softmax  # Your from-scratch version
 
 
 class TestCompareLSTMWithKeras(unittest.TestCase):
@@ -41,9 +42,11 @@ class TestCompareLSTMWithKeras(unittest.TestCase):
 
     def test_compare_with_keras(self):
         # Run your from-scratch LSTM cell
-        a_next_np, c_next_np, yt_pred_np, _ = lstm_cell_step(
+        a_next_np, c_next_np, logits, _ = lstm_cell_step(
             self.xt, self.a_prev, self.c_prev, self.parameters
         )
+
+        yt_pred = softmax(logits)
 
         # Split weights for Keras
         def split_gate(W):
@@ -98,16 +101,18 @@ class TestCompareLSTMWithKeras(unittest.TestCase):
             c_next_np, c_next_keras, atol=1e-5, err_msg="Mismatch in c_next"
         )
         np.testing.assert_allclose(
-            yt_pred_np, yt_pred_keras, atol=1e-5, err_msg="Mismatch in yt_pred"
+            yt_pred, yt_pred_keras, atol=1e-5, err_msg="Mismatch in yt_pred"
         )
 
         print("✅ Passed: From-scratch matches Keras LSTMCell")
 
     def test_compare_with_keras_model_with_softmax(self):
         # Run your from-scratch LSTM cell
-        a_next_np, c_next_np, yt_pred_np, _ = lstm_cell_step(
+        a_next_np, c_next_np, logits, _ = lstm_cell_step(
             self.xt, self.a_prev, self.c_prev, self.parameters
         )
+
+        yt_pred = softmax(logits)
 
         # Split weights
         def split_gate(W):
@@ -178,13 +183,69 @@ class TestCompareLSTMWithKeras(unittest.TestCase):
             err_msg="Mismatch in c_next (model+softmax)",
         )
         np.testing.assert_allclose(
-            yt_pred_np,
+            yt_pred,
             yt_pred_keras,
             atol=1e-5,
             err_msg="Mismatch in yt_pred (model+softmax)",
         )
 
         print("✅ Passed: From-scratch matches Keras model with softmax inside")
+
+    def test_compare_logits_only(self):
+        # Run your from-scratch LSTM cell
+        a_next_np, _, logits_scratch, _ = lstm_cell_step(
+            self.xt, self.a_prev, self.c_prev, self.parameters
+        )
+
+        # Prepare weights for Keras
+        def split_gate(W):
+            return W[:, : self.n_a], W[:, self.n_a :]
+
+        Wi_rec, Wi_in = split_gate(self.parameters["Wi"])
+        Wf_rec, Wf_in = split_gate(self.parameters["Wf"])
+        Wc_rec, Wc_in = split_gate(self.parameters["Wc"])
+        Wo_rec, Wo_in = split_gate(self.parameters["Wo"])
+
+        kernel = np.concatenate([Wi_in.T, Wf_in.T, Wc_in.T, Wo_in.T], axis=1)
+        recurrent_kernel = np.concatenate(
+            [Wi_rec.T, Wf_rec.T, Wc_rec.T, Wo_rec.T], axis=1
+        )
+        bias = np.concatenate(
+            [
+                self.parameters["bi"].flatten(),
+                self.parameters["bf"].flatten(),
+                self.parameters["bc"].flatten(),
+                self.parameters["bo"].flatten(),
+            ]
+        )
+
+        # Build LSTMCell + Dense (no softmax)
+        cell = LSTMCell(self.n_a)
+        dense = Dense(self.n_y)  # No activation
+
+        x_tf = tf.convert_to_tensor(self.xt.T, dtype=tf.float32)
+        a_prev_tf = tf.convert_to_tensor(self.a_prev.T, dtype=tf.float32)
+        c_prev_tf = tf.convert_to_tensor(self.c_prev.T, dtype=tf.float32)
+
+        cell.build(x_tf.shape)
+        cell.set_weights([kernel, recurrent_kernel, bias])
+
+        dense.build((None, self.n_a))
+        dense.set_weights([self.parameters["Wy"].T, self.parameters["by"].flatten()])
+
+        # Forward pass in Keras
+        a_next_tf, _ = cell(x_tf, states=[a_prev_tf, c_prev_tf])
+        logits_keras = dense(a_next_tf).numpy().T  # shape (n_y, m)
+
+        # Compare logits directly
+        np.testing.assert_allclose(
+            logits_scratch,
+            logits_keras,
+            atol=1e-5,
+            err_msg="Mismatch in raw logits between scratch and Keras",
+        )
+
+        print("✅ Passed: Scratch logits match Keras Dense output (no softmax)")
 
 
 if __name__ == "__main__":

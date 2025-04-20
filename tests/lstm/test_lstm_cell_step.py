@@ -2,7 +2,8 @@ import unittest
 
 import numpy as np
 
-from src.models.lstm_model import lstm_cell_step  # adjust path if needed
+from src.models.lstm_model import lstm_cell_step
+from src.utils import softmax  # adjust path if needed
 
 
 class TestLSTMCellStep(unittest.TestCase):
@@ -35,21 +36,35 @@ class TestLSTMCellStep(unittest.TestCase):
         }
 
     def test_lstm_cell_forward_shapes(self):
-        a_next, c_next, yt, cache = lstm_cell_step(
+        a_next, c_next, logits, cache = lstm_cell_step(
             self.xt, self.a_prev, self.c_prev, self.parameters
         )
 
         self.assertEqual(a_next.shape, (self.n_a, self.m), "Incorrect shape for a_next")
         self.assertEqual(c_next.shape, (self.n_a, self.m), "Incorrect shape for c_next")
-        self.assertEqual(yt.shape, (self.n_y, self.m), "Incorrect shape for yt")
+        self.assertEqual(logits.shape, (self.n_y, self.m), "Incorrect shape for logits")
         self.assertIsInstance(cache, tuple, "Cache must be a tuple")
         self.assertEqual(len(cache), 10, "Cache tuple must contain 10 elements")
 
     def test_lstm_cell_step_values(self):
-        a_next, c_next, yt, _ = lstm_cell_step(
+        a_next, c_next, logits, _ = lstm_cell_step(
             self.xt, self.a_prev, self.c_prev, self.parameters
         )
 
+        y_hat = softmax(logits)
+
+        # ---- Logging ----
+        print("\n[DEBUG] LSTM Cell Output")
+        print("-" * 40)
+        print("Logits ([:, 0]):")
+        print(logits[:, 0])
+        print("\nSoftmax Probabilities ([:, 0]):")
+        print(y_hat[:, 0])
+        print("\na_next[4, 0]:", a_next[4, 0])
+        print("c_next[2, 0]:", c_next[2, 0])
+        print("-" * 40)
+
+        # ---- Assertions ----
         np.testing.assert_almost_equal(
             a_next[4, 0],
             -0.664085,
@@ -63,10 +78,16 @@ class TestLSTMCellStep(unittest.TestCase):
             err_msg="Unexpected value in c_next[2,0]",
         )
         np.testing.assert_almost_equal(
-            yt[1, 0],
+            logits[1, 0],
+            0.290429,
+            decimal=5,
+            err_msg="Unexpected value in logits[1,0]",
+        )
+        np.testing.assert_almost_equal(
+            y_hat[1, 0],
             0.799139,
             decimal=5,
-            err_msg="Unexpected value in yt[1,0]",
+            err_msg="Unexpected value in y_hat[1,0]",
         )
 
 

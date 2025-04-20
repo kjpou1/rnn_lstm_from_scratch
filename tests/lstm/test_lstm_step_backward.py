@@ -29,7 +29,7 @@ class TestLSTMStepBackward(unittest.TestCase):
         )
 
         # Forward pass to get cache
-        self.a_next, self.c_next, self.yt_pred, self.cache = lstm_cell_step(
+        self.a_next, self.c_next, self.logits, self.cache = lstm_cell_step(
             self.xt, self.a_prev, self.c_prev, self.parameters
         )
 
