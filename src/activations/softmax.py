@@ -25,17 +25,28 @@ class SoftmaxActivation(BaseActivation):
     @staticmethod
     def forward(x: np.ndarray) -> np.ndarray:
         """
-        Compute the softmax output.
+        Compute softmax probabilities from raw logits with numerical stability.
 
         Args:
-            x (ndarray): Input logits (n, 1) or (n,)
+            x (ndarray): Input array of logits.
+                - Shape (n_classes, 1) for single example
+                - Shape (n_classes,) is also supported
 
         Returns:
-            ndarray: Probability vector (same shape as x)
+            ndarray: Softmax probabilities (same shape as input)
         """
-        x = x - np.max(x)  # for numerical stability
-        exp_x = np.exp(x)
-        return exp_x / np.sum(exp_x, axis=0)
+        # 🧠 Numerical Stability Trick:
+        # Subtract the max value to avoid large exponents (e.g. exp(1000))
+        # This ensures the result of exp(x - max) is safe from overflow
+        x_max = np.max(x, axis=0, keepdims=True)  # shape: (1, 1) or (1,)
+
+        # Compute exponentials after stabilization
+        exp_x = np.exp(x - x_max)
+
+        # Normalize across the class axis (column vector case → axis=0)
+        softmax_output = exp_x / np.sum(exp_x, axis=0, keepdims=True)
+
+        return softmax_output
 
     @staticmethod
     def backward(s: np.ndarray) -> np.ndarray:
