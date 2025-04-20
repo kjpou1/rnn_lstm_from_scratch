@@ -48,6 +48,26 @@
         "--optimizer",
         "adam"
       ]
+    },
+    {
+      "name": "Train Dinos - Scratch (LSTM)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "src.scratch_char_level_lstm_model",
+      "console": "integratedTerminal",
+      "env": {
+        "PYTHONPATH": "."
+      },
+      "args": [
+        "--dataset",
+        "dinos",
+        "--iterations",
+        "22001",
+        "--sample_every",
+        "2000",
+        "--optimizer",
+        "momentum"
+      ]
     }
   ]
 }
