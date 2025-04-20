@@ -18,16 +18,17 @@ def softmax(z):
     Returns:
         np.ndarray: Softmax output with same shape as input (n_y, m)
     """
+    axis = 0 if z.ndim == 2 else (0 if z.shape[1] == 1 else 1)
     # 🧠 Numerical stability trick:
     # Subtract the max value from each column to avoid large exponentials (overflow)
     # This preserves relative differences while stabilizing the computation
-    z_max = np.max(z, axis=0, keepdims=True)  # shape: (1, m)
+    z_max = np.max(z, axis=axis, keepdims=True)  # shape: (1, m)
 
     # Compute exponentials after centering
     exp_z = np.exp(z - z_max)
 
     # Normalize by the sum across classes (axis=0 handles vertical softmax over classes)
-    softmax_output = exp_z / np.sum(exp_z, axis=0, keepdims=True)
+    softmax_output = exp_z / np.sum(exp_z, axis=axis, keepdims=True)
 
     return softmax_output
 
@@ -49,12 +50,16 @@ def cross_entropy_loss(z, y_true):
     Stable cross-entropy loss from logits.
 
     Args:
-        z (ndarray): Raw logits of shape (vocab_size, T_x)
+        z (ndarray): Raw logits of shape (vocab_size, T_x) or (vocab_size, 1, T_x)
         y_true (list[int]): Ground truth token indices
 
     Returns:
         float: Average cross-entropy loss
     """
+    # If 3D: squeeze out middle dimension (assumes shape (vocab_size, 1, T_x))
+    if z.ndim == 3 and z.shape[1] == 1:
+        z = np.squeeze(z, axis=1)  # → (vocab_size, T_x)
+
     T_x = len(y_true)
     logits = z - np.max(z, axis=0, keepdims=True)  # for numerical stability
     exp_logits = np.exp(logits)
@@ -69,34 +74,42 @@ def cross_entropy_loss(z, y_true):
     return loss / T_x
 
 
-def clip(gradients, maxValue):
+def cross_entropy_loss_grad_from_logits(logits, y_true):
     """
-    Clips the gradients' values between minimum and maximum.
+    Compute gradient of the cross-entropy loss with respect to logits.
 
-    Arguments:
-    gradients -- a dictionary containing the gradients "dWaa", "dWax", "dWya", "db", "dby"
-    maxValue -- everything above this number is set to this number, and everything less than -maxValue is set to -maxValue
+    Args:
+        logits (ndarray): Raw logits, shape (vocab_size, 1, T_x)
+        y_true (list[int]): Ground truth token indices, length T_x
 
     Returns:
-    gradients -- a dictionary with the clipped gradients.
+        dy (ndarray): Gradient w.r.t logits, same shape as logits
     """
-    gradients = copy.deepcopy(gradients)
+    y_hat = softmax(logits)  # shape (vocab_size, 1, T_x)
+    dy = y_hat.copy()
 
-    dWaa, dWax, dWya, dba, dby = (
-        gradients["dWaa"],
-        gradients["dWax"],
-        gradients["dWya"],
-        gradients["dba"],
-        gradients["dby"],
-    )
+    for t, target_index in enumerate(y_true):
+        dy[target_index, 0, t] -= 1  # softmax - one-hot at each time step
 
-    # Clip to mitigate exploding gradients, loop over [dWax, dWaa, dWya, db, dby]. (≈2 lines)
-    for grad in [dWaa, dWax, dWya, dba, dby]:
-        np.clip(grad, -maxValue, maxValue, out=grad)
+    dy /= len(y_true)  # average over sequence length
+    return dy
 
-    gradients = {"dWaa": dWaa, "dWax": dWax, "dWya": dWya, "dba": dba, "dby": dby}
 
-    return gradients
+def clip(gradients, maxValue):
+    """
+    Clip all gradients in the dictionary to [-max_value, max_value].
+
+    Args:
+        gradients (dict): Dictionary of gradients (e.g., from backprop)
+        max_value (float): Threshold for clipping
+
+    Returns:
+        dict: Same dictionary with clipped gradients
+    """
+    clipped = {}
+    for key, grad in gradients.items():
+        clipped[key] = np.clip(grad, -maxValue, maxValue)
+    return clipped
 
 
 def sample_from_logits(logits, seed=None):
