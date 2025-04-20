@@ -92,8 +92,21 @@ Unlike the original course, we do **not apply softmax during the forward pass**.
 This was a **conscious architectural decision** — not a shortcut.  
 It helps us better debug gradients, align with frameworks, and prepare for deeper experiments like temperature sampling and attention mechanisms.
 
+---
+
+## ✅ RNN Tests
+
+The RNN modules are backed by a comprehensive set of unit tests to ensure correctness in both forward and backward passes.
+
+- 🔁 Validates `rnn_cell_step()`, `rnn_forward()`  and `rnn_backward()` against Keras
+- 🎯 Compares gradients with `GradientTape` for numerical alignment
+- 📉 Confirms training loss decreases over time
+- 🧪 Checks sampling behavior, sequence length, and vocabulary coverage
+
+📄 See [`tests/rnn/README.md`](tests/rnn/README.md) for the full suite. All tests are deterministic and self-contained.
 
 ---
+
 
 ## ✅ LSTM Tests
 
