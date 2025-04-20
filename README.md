@@ -6,6 +6,38 @@ Learn how **recurrent neural networks** (RNNs) and **long short-term memory netw
 
 ---
 
+## 📚 Table of Contents
+
+- [RNN-LSTM-from-Scratch](#rnn-lstm-from-scratch)
+  - [📚 Table of Contents](#-table-of-contents)
+  - [🚀 Why This Project?](#-why-this-project)
+  - [🎯 Project Philosophy](#-project-philosophy)
+  - [🧠 What's Inside](#-whats-inside)
+    - [✅ Core Features](#-core-features)
+    - [🧪 Training Scripts](#-training-scripts)
+    - [⚙️ Optimization](#️-optimization)
+  - [🤖 Two Ways to Train](#-two-ways-to-train)
+  - [📈 Features Overview](#-features-overview)
+  - [🧠 Design Decisions](#-design-decisions)
+    - [❗Logits instead of Softmax in the Forward Pass](#logits-instead-of-softmax-in-the-forward-pass)
+  - [✅ Tests](#-tests)
+    - [🔁 RNN Tests](#-rnn-tests)
+    - [🧠 LSTM Tests](#-lstm-tests)
+  - [📁 Project Layout](#-project-layout)
+  - [📚 Datasets](#-datasets)
+  - [🧪 Running the Code](#-running-the-code)
+    - [🔹 Single-Example Training](#-single-example-training)
+      - [CLI Arguments](#cli-arguments)
+    - [🔹 Mini-Batch Training](#-mini-batch-training)
+      - [CLI Arguments](#cli-arguments-1)
+  - [✍️ Example Output](#️-example-output)
+  - [🛠️ Coming Soon](#️-coming-soon)
+  - [🧩 Built With](#-built-with)
+  - [📬 Contributing](#-contributing)
+  - [🎓 Learn More](#-learn-more)
+
+---
+
 ## 🚀 Why This Project?
 - Master the **nuts and bolts** of RNNs and LSTMs by building everything yourself.
 - See exactly **how models learn** through **forward passes**, **backward passes**, and **optimizer updates**.
