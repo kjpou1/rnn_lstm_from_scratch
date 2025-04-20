@@ -73,46 +73,56 @@ def lstm_cell_step(xt, a_prev, c_prev, parameters):
     return a_next, c_next, logits, cache
 
 
-def lstm_forward(x, a0, parameters):
+def lstm_forward(x_seq, a0, parameters):
     """
-    Run an LSTM over Tx time steps.
+    Run an LSTM over T_x time steps.
 
     Args:
-        x (ndarray): Input data, shape (n_x, m, T_x)
-        a0 (ndarray): Initial hidden state, shape (n_a, m)
+        x_seq (ndarray): Sequence of token indices, shape (T_x,)
+        a0 (ndarray): Initial hidden state, shape (n_a, 1)
         parameters (dict): LSTM parameters
 
     Returns:
-        a (ndarray): Hidden states, shape (n_a, m, T_x)
-        y (ndarray): Predictions, shape (n_y, m, T_x)
+        a (ndarray): Hidden states, shape (n_a, 1, T_x)
+        logits (ndarray): Raw output scores, shape (n_y, 1, T_x)
         caches (list): List of caches for backprop
     """
     caches = []
+    # print("→ a0 shape:", a0.shape)
+    # print("→ Wf shape:", parameters["Wf"].shape)
 
-    n_x, m, T_x = x.shape
     n_a, _ = a0.shape
     n_y, _ = parameters["Wy"].shape
+    T_x = len(x_seq)
 
-    # Initialize outputs
-    a = np.zeros((n_a, m, T_x))
-    c = np.zeros((n_a, m, T_x))
-    logits = np.zeros((n_y, m, T_x))
+    # Infer vocab size from parameter shapes
+    n_a_check, n_concat = parameters["Wf"].shape
+    assert n_a_check == n_a, "Mismatch between a0 and Wf shape"
+    n_x = n_concat - n_a
+    vocab_size = n_x
 
-    # Initialize a_next and c_next
+    a = np.zeros((n_a, 1, T_x))
+    c = np.zeros((n_a, 1, T_x))
+    logits = np.zeros((n_y, 1, T_x))
+
     a_next = a0
-    c_next = np.zeros((n_a, m))
+    c_next = np.zeros_like(a0)
 
     for t in range(T_x):
-        xt = x[:, :, t]  # Slice x at time step t → shape (n_x, m)
+        x_t = np.zeros((vocab_size, 1))
+        x_t[x_seq[t]] = 1  # one-hot
 
-        a_next, c_next, logits_t, cache = lstm_cell_step(xt, a_next, c_next, parameters)
+        a_next, c_next, logits_t, cache = lstm_cell_step(
+            x_t, a_next, c_next, parameters
+        )
 
-        # Store into output tensors
         a[:, :, t] = a_next
         c[:, :, t] = c_next
         logits[:, :, t] = logits_t
-
         caches.append(cache)
+
+    # logits: (n_y, 1, T_x)
+    # logits = np.squeeze(logits, axis=1)  # → (n_y, T_x)
 
     return a, logits, caches
 
@@ -212,7 +222,7 @@ def lstm_step_backward(da_next, dc_next, cache):
     return gradients
 
 
-def lstm_backwards(da, caches):
+def lstm_backwards(da, caches, dy=None):
     """
     Implements the backward pass over an entire sequence for an LSTM.
 
@@ -222,6 +232,7 @@ def lstm_backwards(da, caches):
         caches (tuple): Tuple containing:
             - list of caches from each time step (one per step, from lstm_step_forward)
             - input x used in lstm_forward, shape (n_x, m, T_x)
+        dy (ndarray, optional): Gradient of loss w.r.t. logits, shape (n_y, m, T_x)
 
     Returns:
         gradients (dict): Dictionary containing:
@@ -229,6 +240,7 @@ def lstm_backwards(da, caches):
             - da0: Gradient of initial hidden state, shape (n_a, m)
             - dWf, dWi, dWc, dWo: Gradients of weight matrices
             - dbf, dbi, dbc, dbo: Gradients of biases
+            - dWy, dby (optional): Gradients of output layer if dy is provided
     """
     # Unpack caches
     lstm_caches, x = caches
@@ -237,6 +249,7 @@ def lstm_backwards(da, caches):
     # Retrieve dimensions
     n_a, m, T_x = da.shape
     n_x, _ = xt.shape
+    n_y = parameters["Wy"].shape[0]
 
     # Initialize gradients
     dx = np.zeros((n_x, m, T_x))
@@ -252,6 +265,9 @@ def lstm_backwards(da, caches):
     dbi = np.zeros_like(parameters["bi"])
     dbc = np.zeros_like(parameters["bc"])
     dbo = np.zeros_like(parameters["bo"])
+
+    # Optional: collect a[t] for dWy
+    a_all = []
 
     # Loop backward through time
     for t in reversed(range(T_x)):
@@ -275,6 +291,10 @@ def lstm_backwards(da, caches):
         dbc += grads["dbc"]
         dbo += grads["dbo"]
 
+        # Collect activations for output layer gradient if dy is provided
+        if dy is not None:
+            a_all.insert(0, lstm_caches[t][0])  # a_next at time t
+
     # Final da0 from the last timestep's da_prev
     da0 = da_prevt
 
@@ -291,5 +311,11 @@ def lstm_backwards(da, caches):
         "dWo": dWo,
         "dbo": dbo,
     }
+
+    # Add output layer gradients if logits gradient is provided
+    if dy is not None:
+        a_stack = np.stack(a_all, axis=2)  # shape (n_a, m, T_x)
+        gradients["dWy"] = np.dot(dy.reshape(n_y, -1), a_stack.reshape(n_a, -1).T)
+        gradients["dby"] = np.sum(dy, axis=(1, 2)).reshape(-1, 1)
 
     return gradients
