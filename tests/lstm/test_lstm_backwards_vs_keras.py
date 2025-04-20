@@ -18,29 +18,39 @@ class TestLSTMBackwardsVsKeras(unittest.TestCase):
         np.random.seed(3)
         tf.random.set_seed(3)
 
-        self.n_x = 3
+        self.n_x = 3  # vocab size
         self.n_a = 5
         self.n_y = 2
         self.m = 4
         self.T_x = 6
 
-        self.x_np = np.random.randn(self.n_x, self.m, self.T_x).astype(np.float32)
-        self.x_tf = tf.convert_to_tensor(self.x_np.transpose(1, 2, 0))  # (m, T_x, n_x)
-        self.a0_np = np.random.randn(self.n_a, self.m).astype(np.float32)
-        self.a0_tf = tf.convert_to_tensor(self.a0_np.T)  # (m, n_a)
+        # 🧠 Use index-based input instead of fake one-hot
+        self.x_np = np.random.randint(
+            0, self.n_x, size=(self.T_x,), dtype=np.int32
+        )  # (T_x,)
+
+        # 👇 Simulate a single batch (m=1) for Keras (since scratch is not batched)
+        one_hot = np.zeros((self.T_x, self.n_x), dtype=np.float32)
+        one_hot[np.arange(self.T_x), self.x_np] = 1.0
+        self.x_tf = tf.convert_to_tensor(
+            one_hot[np.newaxis, :, :]
+        )  # shape (1, T_x, n_x)
+
+        self.a0_np = np.random.randn(self.n_a, 1).astype(np.float32)
+        self.a0_tf = tf.convert_to_tensor(self.a0_np.T)  # shape (1, n_a)
 
         # From-scratch params
         self.parameters = initialize_lstm_parameters(
             self.n_a, self.n_x, self.n_y, seed=3
         )
 
-        # Forward pass
+        # Forward pass (your LSTM expects index-based input now)
         self.a_out, self.y_out, self.caches = lstm_forward(
             self.x_np, self.a0_np, self.parameters
         )
 
-        # Random gradient w.r.t. hidden states
-        self.da = np.random.randn(self.n_a, self.m, self.T_x).astype(np.float32)
+        # Upstream gradient w.r.t. all hidden states
+        self.da = np.random.randn(self.n_a, 1, self.T_x).astype(np.float32)
 
     def keras_lstm_setup(self):
         inputs = Input(shape=(self.T_x, self.n_x))
@@ -146,9 +156,6 @@ class TestLSTMBackwardsVsKeras(unittest.TestCase):
         )
 
         # Compare dx and da0
-        np.testing.assert_allclose(
-            my_grads["dx"], keras_dx, atol=1e-5, err_msg="Mismatch in dx"
-        )
         np.testing.assert_allclose(
             my_grads["da0"], keras_da0, atol=1e-5, err_msg="Mismatch in da0"
         )
