@@ -171,6 +171,76 @@ Just drop a `.txt` file into the `data/` folder — you’re ready to go!
 
 ---
 
+## 🧪 Running the Code
+
+This project includes two scratch-built NumPy training scripts:
+
+- 🧬 `scratch_char_level_rnn_model.py`: single-example RNN training
+- 🧪 `scratch_char_level_rnn_model_batch.py`: mini-batch RNN training
+
+> ✅ Before running either script, be sure to set:
+```bash
+export PYTHONPATH=.
+```
+
+---
+
+### 🔹 Single-Example Training
+
+```bash
+python -m src.scratch_char_level_rnn_model
+
+or
+
+PYTHONPATH=. python -m src.scratch_char_level_rnn_model
+```
+
+#### CLI Arguments
+
+| Argument            | Description                                                                 |
+|---------------------|-----------------------------------------------------------------------------|
+| `--dataset`         | Dataset name (e.g. `dinos` → `data/dinos.txt`)                              |
+| `--iterations`      | Number of training iterations                                               |
+| `--learning_rate`   | Learning rate for gradient descent                                          |
+| `--optimizer`       | Optimizer type: `sgd`, `momentum`, `rms`, or `adam`                         |
+| `--temperature`     | Sampling temperature: <br>`<1` = more deterministic, `>1` = more creative   |
+| `--hidden_size`     | Number of RNN hidden units                                                  |
+| `--sample_every`    | Print sampled text every N iterations                                       |
+| `--seq_length`      | Maximum length of generated samples                                         |
+| `--clip_value`      | Gradient clipping threshold                                                 |
+
+---
+
+### 🔹 Mini-Batch Training
+
+```bash
+python -m src.scratch_char_level_rnn_model_batch
+
+or 
+
+PYTHONPATH=. python -m src.scratch_char_level_rnn_model_batch
+```
+
+#### CLI Arguments
+
+| Argument            | Description                                                                 |
+|---------------------|-----------------------------------------------------------------------------|
+| `--dataset`         | Dataset name (e.g. `dinos`)                                                 |
+| `--epochs`          | Number of training epochs (full data passes)                                |
+| `--batch_size`      | Size of mini-batches                                                        |
+| `--learning_rate`   | Learning rate                                                               |
+| `--optimizer`       | Optimizer type: `sgd`, `momentum`, `rms`, or `adam`                         |
+| `--temperature`     | Sampling temperature                                                        |
+| `--hidden_size`     | Hidden layer size                                                           |
+| `--seq_length`      | Length of generated sequences                                               |
+| `--clip_value`      | Max allowed gradient norm (clipping)                                       |
+| `--deterministic`   | Set this flag for deterministic shuffling (reproducibility)                |
+
+> The mini-batch script uses **line-by-line training** and applies `pad_sequences()` to handle variable input lengths.
+
+
+---
+
 ## ✍️ Example Output
 After training on dinosaur names:
 ```
