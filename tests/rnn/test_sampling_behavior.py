@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 
 from src.rnn_model import initialize_rnn_parameters
-from src.scratch_char_level_rnn_model import generate_text
+from src.sampling import generate_text
 from src.tokenizer import CharTokenizer
 
 
