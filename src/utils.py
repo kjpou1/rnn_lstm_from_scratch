@@ -5,18 +5,31 @@ import numpy as np
 import tensorflow as tf
 
 
-def softmax(x):
+def softmax(z):
     """
-    Compute softmax of a vector.
+    Compute the softmax activation in a numerically stable way.
+
+    This function supports both single examples and batched inputs.
 
     Args:
-        x (ndarray): Input vector
+        z (np.ndarray): Logits of shape (n_y, m) or (n_y, 1),
+                        where n_y is number of classes and m is batch size.
 
     Returns:
-        ndarray: Softmax-normalized probabilities
+        np.ndarray: Softmax output with same shape as input (n_y, m)
     """
-    e_x = np.exp(x - np.max(x))
-    return e_x / np.sum(e_x, axis=0)
+    # 🧠 Numerical stability trick:
+    # Subtract the max value from each column to avoid large exponentials (overflow)
+    # This preserves relative differences while stabilizing the computation
+    z_max = np.max(z, axis=0, keepdims=True)  # shape: (1, m)
+
+    # Compute exponentials after centering
+    exp_z = np.exp(z - z_max)
+
+    # Normalize by the sum across classes (axis=0 handles vertical softmax over classes)
+    softmax_output = exp_z / np.sum(exp_z, axis=0, keepdims=True)
+
+    return softmax_output
 
 
 def sigmoid(x):
@@ -31,24 +44,29 @@ def get_initial_loss(vocab_size, seq_length):
     return -np.log(1.0 / vocab_size) * seq_length
 
 
-def cross_entropy_loss(y_hat, y_true):
+def cross_entropy_loss(z, y_true):
     """
-    Compute total cross-entropy loss over a sequence.
+    Stable cross-entropy loss from logits.
 
     Args:
-        y_hat (dict): {t: ndarray of shape (vocab_size, 1)} — softmax outputs at each timestep
-        y_true (list[int]): List of target indices (length T_x)
+        z (ndarray): Raw logits of shape (vocab_size, T_x)
+        y_true (list[int]): Ground truth token indices
 
     Returns:
-        float: total loss
+        float: Average cross-entropy loss
     """
+    T_x = len(y_true)
+    logits = z - np.max(z, axis=0, keepdims=True)  # for numerical stability
+    exp_logits = np.exp(logits)
+    log_probs = logits - np.log(
+        np.sum(exp_logits, axis=0, keepdims=True)
+    )  # log softmax
+
     loss = 0.0
     for t, target_index in enumerate(y_true):
-        prob = y_hat[t][target_index, 0]
-        # loss -= np.log(prob + 1e-12)  # prevent log(0)
-        loss -= np.log(prob)  # prevent log(0)
+        loss -= log_probs[target_index, t]
 
-    return loss
+    return loss / T_x
 
 
 def clip(gradients, maxValue):
@@ -110,6 +128,7 @@ def get_sample(sample_ix, ix_to_char):
     txt = txt[0].upper() + txt[1:]  # capitalize first character
     return txt
 
+
 def pad_sequences(sequences, padding="post", value=0):
     """
     Pads a list of variable-length sequences to the same length.
@@ -130,13 +149,14 @@ def pad_sequences(sequences, padding="post", value=0):
 
     for i, seq in enumerate(sequences):
         if padding == "post":
-            padded[i, :len(seq)] = seq
+            padded[i, : len(seq)] = seq
         elif padding == "pre":
-            padded[i, -len(seq):] = seq
+            padded[i, -len(seq) :] = seq
         else:
             raise ValueError(f"Unsupported padding strategy: {padding}")
 
     return padded
+
 
 def set_random_seed(seed):
     """
