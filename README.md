@@ -29,19 +29,25 @@ Our goal is to **learn by building**, not just by using. That means stepping awa
 ### ✅ Core Features
 - `CharTokenizer`: Maps characters ↔️ indices (with OOV support)
 - `data_prep.py`: Load text data and create training sequences
-- `rnn_model.py`: RNN core logic (forward, backward, sampling, gradient clipping)
+- `rnn_model.py`: RNN core logic (forward, backward, sampling, logits-based loss)
+- `utils.py`: Utility functions like `softmax`, loss smoothing, sequence padding, clipping
+- `activations/`: Custom activation functions (`tanh`, `sigmoid`, `softmax`)  
+  📄 See [`README_ACTIVATION.md`](README_ACTIVATION.md) for math, gradients, and usage.
 
-- **Training Scripts**:
-  - `scratch_char_level_rnn_model.py`: Single example training (NumPy)
-  - `scratch_char_level_rnn_batch_train.py`: Mini-batch training (NumPy)
-  - `tf_char_level_rnn_model.py`: TensorFlow model (`model.fit` API)
-  - `tf_char_rnn_manual_train.py`: TensorFlow model with manual training loop
-  - `tf_char_rnn.py`: TensorFlow model class (`TFCharRNN`)
+### 🧪 Training Scripts
+- `scratch_char_level_rnn_model.py`: Single-example training (NumPy)
+- `scratch_char_level_rnn_model_batch.py`: Mini-batch training (NumPy)
+- `tf_char_level_rnn_model.py`: TensorFlow model (`model.fit` API)
+- `tf_char_rnn_manual_train.py`: TensorFlow model with manual training loop
+- `tf_char_rnn.py`: TensorFlow model class (`TFCharRNN`)
 
-- `utils.py`: Helper functions: softmax, loss smoothing, random seeds
-- `optimizers.py`: Custom-built SGD, RMSProp, and Adam optimizers
-
-✅ See detailed optimizer docs [**here**](README_OPTIMIZER.md).
+### ⚙️ Optimization
+- `optimizers/`: Custom implementations of:
+  - `SGDOptimizer`
+  - `MomentumOptimizer`
+  - `RMSPropOptimizer`
+  - `AdamOptimizer`  
+  📄 See full optimizer docs: [`README_OPTIMIZER.md`](README_OPTIMIZER.md)
 
 ---
 
