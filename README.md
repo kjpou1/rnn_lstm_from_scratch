@@ -14,6 +14,16 @@ Learn how **recurrent neural networks** (RNNs) and **long short-term memory netw
 
 ---
 
+## 🎯 Project Philosophy
+
+This project isn't just about repeating what's taught — it's about breaking things down, rebuilding them, and truly understanding **how neural networks tick**. We dig under the hood to understand the math, the matrix ops, and the mechanics that make RNNs and LSTMs work.
+
+Our goal is to **learn by building**, not just by using. That means stepping away from the Keras high-level API and rebuilding each part from scratch — even if it’s harder, slower, and less elegant. The result? You walk away understanding not just *what* to do, but *why* it works.
+
+> Think of this as a laboratory for neural networks — part engineering, part science fair, part curiosity project.
+
+---
+
 ## 🧠 What's Inside
 
 ### ✅ Core Features
@@ -62,6 +72,26 @@ Learn how **recurrent neural networks** (RNNs) and **long short-term memory netw
 | Sampling (temperature)      | ✅ | ✅ | Complete |
 | LSTM cell                   | 🔜 | 🔜 | Coming Soon |
 | Optimizers (SGD, RMSProp, Adam) | ✅ | ✅ | Complete |
+
+---
+
+## 🧠 Design Decisions
+
+This project **intentionally deviates** from the Coursera implementation in key places to align better with deep learning best practices:
+
+### ❗Logits instead of Softmax in the Forward Pass
+
+Unlike the original course, we do **not apply softmax during the forward pass**. Instead, we return the raw output logits and defer softmax to the loss function or sampling step.
+
+**Why?**
+
+- ✅ This mirrors modern deep learning frameworks like TensorFlow and PyTorch, where loss functions (e.g. `categorical_crossentropy`) handle softmax internally via `from_logits=True`.
+- ✅ It improves **numerical stability** and reduces unnecessary computation during training.
+- ✅ It lets us compute a **vectorized softmax** once during loss calculation, instead of step-by-step during the forward pass.
+
+This was a **conscious architectural decision** — not a shortcut.  
+It helps us better debug gradients, align with frameworks, and prepare for deeper experiments like temperature sampling and attention mechanisms.
+
 
 ---
 
