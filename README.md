@@ -13,9 +13,11 @@ Learn how **recurrent neural networks** (RNNs) and **long short-term memory netw
   - [🚀 Why This Project?](#-why-this-project)
   - [🎯 Project Philosophy](#-project-philosophy)
   - [🧠 What's Inside](#-whats-inside)
-    - [✅ Core Features (NumPy)](#-core-features-numpy)
-    - [🧪 Training Scripts](#-training-scripts)
-    - [⚙️ Optimization](#️-optimization)
+    - [✅ Core Components (NumPy)](#-core-components-numpy)
+    - [🧠 Models (`src/models/`)](#-models-srcmodels)
+    - [🧮 Activations (`src/activations/`)](#-activations-srcactivations)
+    - [🏋️ Training Scripts](#️-training-scripts)
+    - [⚙️ Optimizers (`src/optimizers/`)](#️-optimizers-srcoptimizers)
   - [🤖 Two Ways to Train](#-two-ways-to-train)
   - [📈 Features Overview](#-features-overview)
   - [🧠 Design Decisions](#-design-decisions)
@@ -58,29 +60,48 @@ Our goal is to **learn by building**, not just by using. That means stepping awa
 
 ## 🧠 What's Inside
 
-### ✅ Core Features (NumPy)
+### ✅ Core Components (NumPy)
 - `CharTokenizer`: Maps characters ↔️ indices (with OOV support)
-- `data_prep.py`: Load text data and create training sequences
-- `utils.py`: Utility functions like `softmax`, loss smoothing, sequence padding, clipping
-- `models/rnn_model.py`: RNN core logic (forward, backward, logits-based loss)
-- `models/lstm_model.py`: LSTM core logic (forward, backward)
-- `activations/`: Custom activation functions (`tanh`, `sigmoid`, `softmax`)  
-  📄 See [`README_ACTIVATION.md`](README_ACTIVATION.md) for math, gradients, and usage.
+- `data_prep.py`: Loads text and prepares training sequences
+- `utils.py`: Utility functions for `softmax`, loss smoothing, padding, clipping
+- `sampling.py`: Shared sampling logic (RNN, LSTM) with temperature scaling
 
-### 🧪 Training Scripts
-- `scratch_char_level_rnn_model.py`: Single-example training (NumPy)
-- `scratch_char_level_rnn_model_batch.py`: Mini-batch training (NumPy)
-- `tf_char_level_rnn_model.py`: TensorFlow model (`model.fit` API)
-- `tf_char_rnn_manual_train.py`: TensorFlow model with manual training loop
-- `tf_char_rnn.py`: TensorFlow model class (`TFCharRNN`)
+---
 
-### ⚙️ Optimization
-- `optimizers/`: Custom implementations of:
-  - `SGDOptimizer`
-  - `MomentumOptimizer`
-  - `RMSPropOptimizer`
-  - `AdamOptimizer`  
-  📄 See full optimizer docs: [`README_OPTIMIZER.md`](README_OPTIMIZER.md)
+### 🧠 Models (`src/models/`)
+- `rnn_model.py`: Recurrent Neural Network (RNN)
+  - Forward pass, backpropagation through time (BPTT), loss via logits
+- `lstm_model.py`: Long Short-Term Memory (LSTM)
+  - Forward pass, backward pass, modular activation support
+
+---
+
+### 🧮 Activations (`src/activations/`)
+- `tanh.py`: Hyperbolic tangent with manual forward/backward
+- `sigmoid.py`: Sigmoid activation with manual gradients
+- `softmax.py`: Temperature-scaled softmax (vectorized + single-column)
+- `base.py`: Abstract activation interface (for modular design)
+
+📄 See [`README_ACTIVATION.md`](README_ACTIVATION.md) for full math, gradients, and usage notes.
+
+---
+
+### 🏋️ Training Scripts
+- `scratch_char_level_rnn_model.py`: Single-example RNN training (manual)
+- `scratch_char_level_rnn_model_batch.py`: Mini-batch RNN training (manual)
+- `tf_char_level_rnn_model.py`: TensorFlow model (`model.fit`)
+- `tf_char_rnn_manual_train.py`: TensorFlow with manual training loop
+- `tf_char_rnn.py`: TensorFlow RNN class (`TFCharRNN`)
+
+---
+
+### ⚙️ Optimizers (`src/optimizers/`)
+- `SGDOptimizer`: Basic stochastic gradient descent
+- `MomentumOptimizer`: SGD with momentum
+- `RMSPropOptimizer`: Adaptive learning with RMS decay
+- `AdamOptimizer`: Adaptive Moment Estimation (Adam)
+
+📄 Full docs: [`README_OPTIMIZER.md`](README_OPTIMIZER.md)
 
 ---
 
