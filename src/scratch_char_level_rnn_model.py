@@ -137,13 +137,13 @@ def main(
         _, _, logits, _ = cache  # logits: shape (vocab_size, T_x)
 
         # === 3. Compute loss and ∂L/∂logits ===
-        curr_loss, dy = compute_loss_and_grad(logits, y_seq, reduction="sum")
+        curr_loss, dy = compute_loss_and_grad(logits, y_seq, reduction="mean")
 
         # === 4. Project ∂L/∂logits → ∂L/∂a for RNN backprop ===
         da = project_logit_grad_to_hidden(dy, parameters["Wya"])
 
         # === 5. Backward pass through RNN ===
-        gradients, a = rnn_backward(x_seq, y_seq, parameters, cache)
+        gradients, a = rnn_backward(da, parameters, cache)
 
         # === 6. Output layer gradients (∂L/∂Wya, ∂L/∂by) ===
         grads_out = compute_output_layer_gradients(dy, a)

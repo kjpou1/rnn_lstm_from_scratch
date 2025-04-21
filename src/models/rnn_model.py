@@ -119,34 +119,30 @@ def rnn_forward(X, a0, parameters):
     return a, x, logits, z_t
 
 
-def rnn_step_backward(dy, da_next, cache):
+def rnn_step_backward(da, cache):
     """
-    Backprop for a single RNN cell.
+    Backward pass for a single RNN cell (recurrent path only — excludes output layer).
+
+    This computes the gradients with respect to the input weights (Wax),
+    recurrent weights (Waa), bias (ba), and previous hidden state (a_prev),
+    given the upstream gradient ∂L/∂a from the current timestep.
 
     Args:
-        dy: Gradient of loss w.r.t softmax output, shape (n_y, 1)
-        da_next: Gradient w.r.t next hidden state (from future timestep)
-        cache: Tuple from forward pass
+        da (ndarray): Gradient of loss w.r.t. hidden state at current timestep, shape (n_a, 1)
+        cache (tuple): Values from forward pass: (a_next, a_prev, x_t, z_t, parameters)
 
     Returns:
-        grads: Dictionary of gradients
-        da_prev: Gradient to propagate back to t-1
+        grads (dict): Gradients w.r.t. parameters — keys: dWax, dWaa, dba
+        da_prev (ndarray): Gradient w.r.t. previous hidden state, shape (n_a, 1)
     """
     a_next, a_prev, x_t, z_t, parameters = cache
-    Waa, Wax, Wya = parameters["Waa"], parameters["Wax"], parameters["Wya"]
-
-    # ∂L/∂Wya = dy · a_nextᵀ
-    dWya = np.dot(dy, a_next.T)
-
-    # ∂L/∂by = dy
-    dby = dy
-
-    # ∂L/∂a = Wyaᵀ · dy + da_next
-    da = np.dot(Wya.T, dy) + da_next
+    Waa, Wax = parameters["Waa"], parameters["Wax"]
 
     # Backprop through tanh activation
-    dz = TanhActivation.backward(z_t) * da  # ∂L/∂z = ∂L/∂a * ∂a/∂z  ← tanh derivative
+    # ∂L/∂z = ∂L/∂a * (1 - tanh²(z))
+    dz = TanhActivation.backward(z_t) * da
 
+    # Gradients w.r.t. parameters
     # ∂L/∂Wax = dz · x_tᵀ
     dWax = np.dot(dz, x_t.T)
 
@@ -156,58 +152,55 @@ def rnn_step_backward(dy, da_next, cache):
     # ∂L/∂ba = dz
     dba = dz
 
+    # Gradient w.r.t. previous hidden state
     # ∂L/∂a_prev = Waaᵀ · dz
     da_prev = np.dot(Waa.T, dz)
 
-    return {
-        "dWax": dWax,
-        "dWaa": dWaa,
-        "dWya": dWya,
-        "dba": dba,
-        "dby": dby,
-    }, da_prev
+    return {"dWax": dWax, "dWaa": dWaa, "dba": dba}, da_prev
 
 
-def rnn_backward(X, Y, parameters, cache):
+def rnn_backward(da, parameters, cache):
     """
-    Full backward pass through time (BPTT).
+    Backward pass through the entire sequence (BPTT) using ∂L/∂a from logits.
+
+    This function accumulates parameter gradients over all timesteps in the sequence
+    by recursively applying `rnn_step_backward`.
 
     Args:
-        X: List of input indices (T_x)
-        Y: List of target indices (T_x)
-        parameters: Model weights
-        cache: Outputs from rnn_forward
+        da (ndarray): Gradient of the loss w.r.t hidden states, shape (n_a, 1, T_x)
+        parameters (dict): RNN weights: Wax, Waa, ba
+        cache (tuple): Outputs from rnn_forward → (a, x, logits, z_t)
 
     Returns:
-        gradients: Dictionary of dWax, dWaa, dWya, dba, dby
-        a: Hidden states over time
+        gradients (dict): Accumulated gradients {dWax, dWaa, dba}
+        a (dict): Hidden states over time, indexed by timestep
     """
-    a, x, logits, z_t = cache
+    a, x, _, z_t = cache
     n_a = parameters["Waa"].shape[0]
+    T_x = len(a) - 1  # because a[-1] is the initial hidden state
 
+    # Initialize gradients
     gradients = {
         "dWax": np.zeros_like(parameters["Wax"]),
         "dWaa": np.zeros_like(parameters["Waa"]),
-        "dWya": np.zeros_like(parameters["Wya"]),
         "dba": np.zeros_like(parameters["ba"]),
-        "dby": np.zeros_like(parameters["by"]),
     }
-    da_next = np.zeros((n_a, 1))
 
-    # 🔁 Precompute softmax across time for all logits (n_y, T_x)
-    y_hat = SoftmaxActivation.forward(logits)
+    da_next = np.zeros((n_a, 1))  # ∂L/∂a for the next timestep (starts at 0)
 
-    for t in reversed(range(len(X))):
-        dy = y_hat[:, [t]]  # shape: (n_y, 1)
+    # Backpropagate through time
+    for t in reversed(range(T_x)):
+        # Slice ∂L/∂a for current timestep and add running da_next
+        da_t = da[:, 0, [t]]  # shape (n_a, 1)
+        da_total = da_t + da_next  # total gradient flowing into this cell
 
-        # 🧮 Cross-entropy gradient: ∂L/∂z = y_hat - y_one_hot
-        # Equivalent to subtracting 1 from the predicted prob at the true class index
-        dy[Y[t], 0] -= 1
-
+        # Retrieve cache for timestep t and perform backward step
         cache_t = (a[t], a[t - 1], x[t], z_t[t], parameters)
-        step_grads, da_next = rnn_step_backward(dy, da_next, cache_t)
+        step_grads, da_next = rnn_step_backward(da_total, cache_t)
 
-        for key in gradients:
-            gradients[key] += step_grads[key]
+        # Accumulate gradients over time
+        gradients["dWax"] += step_grads["dWax"]
+        gradients["dWaa"] += step_grads["dWaa"]
+        gradients["dba"] += step_grads["dba"]
 
     return gradients, a

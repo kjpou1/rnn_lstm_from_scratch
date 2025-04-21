@@ -133,7 +133,7 @@ def train_model(
                 da = project_logit_grad_to_hidden(dy, parameters["Wya"])
 
                 # === 6. Backward pass through time
-                gradients, a = rnn_backward(x_seq, y_seq, parameters, cache)
+                gradients, a = rnn_backward(da, parameters, cache)
 
                 # === 7. Compute ∂L/∂Wya and ∂L/∂by from logits
                 grads_out = compute_output_layer_gradients(dy, a)
