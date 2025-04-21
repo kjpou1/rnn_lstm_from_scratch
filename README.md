@@ -28,11 +28,16 @@ Learn how **recurrent neural networks** (RNNs) and **long short-term memory netw
     - [🧠 LSTM Tests](#-lstm-tests)
   - [📁 Project Layout](#-project-layout)
   - [📚 Datasets](#-datasets)
+  - [⚙️ Setup](#️-setup)
   - [🧪 Running the Code](#-running-the-code)
     - [🔹 Single-Example Training](#-single-example-training)
       - [CLI Arguments](#cli-arguments)
     - [🔹 Mini-Batch Training](#-mini-batch-training)
       - [CLI Arguments](#cli-arguments-1)
+    - [🔹 LSTM Training (From Scratch)](#-lstm-training-from-scratch)
+      - [CLI Arguments](#cli-arguments-2)
+  - [⚡ Quickstart](#-quickstart)
+    - [🔁 Tip: Reset the environment if needed](#-tip-reset-the-environment-if-needed)
   - [✍️ Example Output](#️-example-output)
   - [🛠️ Coming Soon](#️-coming-soon)
   - [🧩 Built With](#-built-with)
@@ -66,6 +71,8 @@ Our goal is to **learn by building**, not just by using. That means stepping awa
 - `data_prep.py`: Loads text and prepares training sequences
 - `utils.py`: Utility functions for `softmax`, loss smoothing, padding, clipping
 - `sampling.py`: Shared sampling logic (RNN, LSTM) with temperature scaling
+- `compute_loss_and_grad`: Combines cross-entropy loss with softmax + ∂L/∂logits, mirroring modern deep learning loss handling (`from_logits=True`).
+- `grad_utils.py`: Functions to project logits → hidden gradients and compute output layer (`dWy`, `dby`) gradients
 
 ---
 
@@ -89,6 +96,7 @@ Our goal is to **learn by building**, not just by using. That means stepping awa
 
 ### 🏋️ Training Scripts
 - `scratch_char_level_rnn_model.py`: Single-example RNN training (manual)
+- `scratch_char_level_lstm_model.py`: Single-example LSTM training (manual)
 - `scratch_char_level_rnn_model_batch.py`: Mini-batch RNN training (manual)
 - `tf_char_level_rnn_model.py`: TensorFlow model (`model.fit`)
 - `tf_char_rnn_manual_train.py`: TensorFlow with manual training loop
@@ -131,7 +139,7 @@ Our goal is to **learn by building**, not just by using. That means stepping awa
 | Training with `model.fit`   | ❌ | ✅ | Complete |
 | Manual training loop        | ✅ | ✅ | Complete |
 | Sampling (temperature)      | ✅ | ✅ | Complete |
-| LSTM cell                   | 🔜 | 🔜 | Coming Soon |
+| LSTM cell                   | ✅  | ❌ | Complete |
 | Optimizers (SGD, RMSProp, Adam) | ✅ | ✅ | Complete |
 
 ---
@@ -234,6 +242,35 @@ Just drop a `.txt` file into the `data/` folder — you’re ready to go!
 
 ---
 
+
+## ⚙️ Setup
+
+Clone the repo and install dependencies:
+
+```bash
+git clone https://github.com/kjpou1/rnn-lstm-from-scratch.git
+cd rnn-lstm-from-scratch
+python -m venv .venv
+source .venv/bin/activate  # or .venv\Scripts\activate on Windows
+pip install -r requirements.txt
+```
+
+Set the Python path to allow module-based execution:
+
+```bash
+export PYTHONPATH=.
+```
+
+Or add it permanently to your shell profile (`.zshrc`, `.bashrc`, etc.):
+
+```bash
+echo 'export PYTHONPATH=.' >> ~/.zshrc
+```
+
+---
+
+
+
 ## 🧪 Running the Code
 
 This project includes two scratch-built NumPy training scripts:
@@ -301,8 +338,83 @@ PYTHONPATH=. python -m src.scratch_char_level_rnn_model_batch
 
 > The mini-batch script uses **line-by-line training** and applies `pad_sequences()` to handle variable input lengths.
 
+---
+
+### 🔹 LSTM Training (From Scratch)
+
+```bash
+python -m src.scratch_char_level_lstm_model
+
+or
+
+PYTHONPATH=. python -m src.scratch_char_level_lstm_model
+```
+
+#### CLI Arguments
+
+| Argument            | Description                                                                 |
+|---------------------|-----------------------------------------------------------------------------|
+| `--dataset`         | Dataset name (e.g. `dinos` → `data/dinos.txt`)                              |
+| `--iterations`      | Number of training iterations                                               |
+| `--learning_rate`   | Learning rate for gradient descent                                          |
+| `--optimizer`       | Optimizer type: `sgd`, `momentum`, `rms`, or `adam`                         |
+| `--temperature`     | Sampling temperature: <br>`<1` = more deterministic, `>1` = more creative   |
+| `--hidden_size`     | Number of LSTM hidden units                                                 |
+| `--sample_every`    | Print sampled text every N iterations                                       |
+| `--seq_length`      | Maximum length of generated samples                                         |
+| `--clip_value`      | Gradient clipping threshold                                                 |
 
 ---
+
+✅ This training script follows the **clean gradient flow** philosophy:
+
+> `Forward → Loss (+ dy) → da → Backward → Output Layer Gradients → Update`
+
+No loss is computed inside the backward pass. You explicitly compute:
+
+- `dy = ∂L/∂z` (via `compute_loss_and_grad`)
+- `da = ∂L/∂a` (via `project_logit_grad_to_hidden`)
+- Then pass `da` into `lstm_backwards`
+
+This keeps the LSTM model logic modular and easy to test.
+
+---
+
+Here's a polished **Quickstart** section you can drop directly into your `README.md`. I’ll also tell you where to place it.
+
+---
+
+
+## ⚡ Quickstart
+
+Want to skip the flags and just run something?
+
+Here are 3 quick commands to get you training instantly — one for each mode:
+
+```bash
+# 🧪 Mini-batch RNN training (NumPy)
+python -m src.scratch_char_level_rnn_model_batch --dataset dinos --epochs 20 --optimizer adam --learning_rate 0.005
+
+# 🧬 Single-example RNN training (NumPy)
+python -m src.scratch_char_level_rnn_model --dataset dinos --iterations 22001 --sample_every 2000 --optimizer rms --learning_rate 0.005
+
+# 🧠 Single-example LSTM training (NumPy)
+python -m src.scratch_char_level_lstm_model --dataset dinos --iterations 22001 --sample_every 2000 --optimizer adam --learning_rate 0.005
+```
+
+No config files, no magic — just raw NumPy and CLI args.  
+Each script prints sample output every few steps so you can **see it learn live.**
+
+---
+
+### 🔁 Tip: Reset the environment if needed
+
+```bash
+export PYTHONPATH=.
+```
+
+---
+
 
 ## ✍️ Example Output
 After training on dinosaur names:
@@ -328,7 +440,6 @@ Yosaurus
 ## 🛠️ Coming Soon
 | Feature | Status |
 |:--------|:-------|
-| LSTM Cell from scratch | 🔜 In Progress |
 | GRU Cell from scratch | 🔜 In Progress |
 | Model checkpointing | ⏳ |
 | Attention mechanism exploration | 🧠 Future |
