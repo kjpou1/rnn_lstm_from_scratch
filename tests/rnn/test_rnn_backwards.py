@@ -3,6 +3,8 @@ import unittest
 import numpy as np
 
 from src.models.rnn_model import initialize_rnn_parameters, rnn_backward, rnn_forward
+from src.utils.grad_utils import compute_output_layer_gradients
+from src.utils.loss_utils import compute_loss_and_grad, project_logit_grad_to_hidden
 
 
 class TestRNNBackwards(unittest.TestCase):
@@ -37,8 +39,15 @@ class TestRNNBackwards(unittest.TestCase):
         # Store cache for backward
         self.cache = (self.a, self.x_cache, self.logits, self.z_t)
 
+        _, self.dy = compute_loss_and_grad(self.logits, self.Y, reduction="sum")
+        self.da = project_logit_grad_to_hidden(
+            self.dy, self.parameters["Wya"]
+        )  # (n_a, 1, T_x)
+
     def test_backward_shapes(self):
-        grads, _ = rnn_backward(self.X, self.Y, self.parameters, self.cache)
+        grads, _ = rnn_backward(self.da, self.parameters, self.cache)
+        grads_out = compute_output_layer_gradients(self.dy, self.a)
+        grads.update(grads_out)
 
         self.assertEqual(grads["dWax"].shape, self.parameters["Wax"].shape)
         self.assertEqual(grads["dWaa"].shape, self.parameters["Waa"].shape)
@@ -49,7 +58,9 @@ class TestRNNBackwards(unittest.TestCase):
         print("\n✅ Passed: rnn_backward produces correctly shaped gradients")
 
     def test_backward_gradient_stats(self):
-        grads, _ = rnn_backward(self.X, self.Y, self.parameters, self.cache)
+        grads, _ = rnn_backward(self.da, self.parameters, self.cache)
+        grads_out = compute_output_layer_gradients(self.dy, self.a)
+        grads.update(grads_out)
 
         print("\n📊 Gradient stats:")
         for name, grad in grads.items():

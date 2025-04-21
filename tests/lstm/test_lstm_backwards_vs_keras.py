@@ -88,39 +88,42 @@ class TestLSTMBackwardsVsKeras(unittest.TestCase):
     def test_compare_gradients_to_keras(self):
         model, lstm_layer = self.keras_lstm_setup()
 
+        # === Run forward + gradient pass with Keras ===
         with tf.GradientTape() as tape:
             tape.watch([self.x_tf, self.a0_tf])
 
+            # Forward pass through Keras LSTM
             output, h, c = lstm_layer(
                 self.x_tf, initial_state=[self.a0_tf, tf.zeros_like(self.a0_tf)]
             )
 
+            # Same upstream gradient used in scratch version
             da_tf = tf.convert_to_tensor(
                 self.da.transpose(1, 2, 0)
-            )  # shape (m, T_x, n_a)
+            )  # shape (1, T_x, n_a)
             loss = tf.reduce_sum(output * da_tf)
 
+        # Get gradients from Keras
         grads = tape.gradient(
             loss, lstm_layer.trainable_variables + [self.x_tf, self.a0_tf]
         )
-        keras_grads = grads[:3]  # kernel, recurrent_kernel, bias
-        keras_dx = grads[3].numpy().transpose(2, 0, 1)  # back to (n_x, m, T_x)
+        keras_dkernel = grads[0].numpy()
+        keras_drecurrent = grads[1].numpy()
+        keras_dbias = grads[2].numpy()
+        keras_dx = grads[3].numpy().transpose(2, 0, 1)  # (n_x, m, T_x)
         keras_da0 = grads[4].numpy().T  # (n_a, m)
 
-        # Get your gradients
+        # === Run from-scratch backward pass ===
         my_grads = lstm_backwards(self.da, self.caches)
 
-        # Extract Keras gate-wise gradients
-        keras_dkernel = keras_grads[0].numpy()
-        keras_drecurrent = keras_grads[1].numpy()
-        keras_dbias = keras_grads[2].numpy()
-
-        def unsplit_gates(matrix):
-            return np.split(matrix, 4, axis=1)
+        # === Unpack and realign Keras gate gradients ===
+        def unsplit_gates(W):
+            return np.split(W, 4, axis=1)
 
         dWi_in_T, dWf_in_T, dWc_in_T, dWo_in_T = unsplit_gates(keras_dkernel)
         dWi_rec_T, dWf_rec_T, dWc_rec_T, dWo_rec_T = unsplit_gates(keras_drecurrent)
 
+        # Reconstruct full weight matrices for each gate
         dWi = np.concatenate([dWi_rec_T.T, dWi_in_T.T], axis=1)
         dWf = np.concatenate([dWf_rec_T.T, dWf_in_T.T], axis=1)
         dWc = np.concatenate([dWc_rec_T.T, dWc_in_T.T], axis=1)
@@ -128,7 +131,7 @@ class TestLSTMBackwardsVsKeras(unittest.TestCase):
 
         dbi, dbf, dbc, dbo = np.split(keras_dbias, 4)
 
-        # Compare gate weights & biases
+        # === Compare gate weights and biases ===
         np.testing.assert_allclose(
             my_grads["dWi"], dWi, atol=1e-5, err_msg="Mismatch in dWi"
         )
@@ -155,13 +158,13 @@ class TestLSTMBackwardsVsKeras(unittest.TestCase):
             my_grads["dbo"].flatten(), dbo, atol=1e-5, err_msg="Mismatch in dbo"
         )
 
-        # Compare dx and da0
+        # === Compare input gradient and initial state ===
         np.testing.assert_allclose(
             my_grads["da0"], keras_da0, atol=1e-5, err_msg="Mismatch in da0"
         )
 
         print(
-            "✅ Passed: Custom lstm_backwards gradients match Keras (weights + inputs + initial state)"
+            "✅ Passed: Custom lstm_backwards gradients match Keras (weights, biases, da0)"
         )
 
 

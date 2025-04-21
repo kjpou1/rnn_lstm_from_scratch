@@ -6,6 +6,8 @@ from tensorflow.keras.layers import Activation, Dense, Input, SimpleRNN
 from tensorflow.keras.models import Model
 
 from src.models.rnn_model import initialize_rnn_parameters, rnn_backward, rnn_forward
+from src.utils.grad_utils import compute_output_layer_gradients
+from src.utils.loss_utils import compute_loss_and_grad, project_logit_grad_to_hidden
 
 
 def print_matrix_diff(mat1, mat2, name="Matrix"):
@@ -59,6 +61,12 @@ class TestRNNBackwardsVsKeras(unittest.TestCase):
             self.X, self.a0, self.parameters
         )
         self.cache = (self.a_out, self.x_cache, self.logits, self.z_t)
+        # === Compute dy and da for backward ===
+
+        _, self.dy = compute_loss_and_grad(self.logits, self.Y, reduction="sum")
+        self.da = project_logit_grad_to_hidden(
+            self.dy, self.parameters["Wya"]
+        )  # (n_a, 1, T_x)
 
     def keras_rnn_with_dense(self):
         # Keras model: SimpleRNN → Dense → Softmax
@@ -118,7 +126,10 @@ class TestRNNBackwardsVsKeras(unittest.TestCase):
         keras_dx = grads[5].numpy().transpose(2, 0, 1)  # (n_x, m, T_x)
 
         # Your gradients
-        my_grads, _ = rnn_backward(self.X, self.Y, self.parameters, self.cache)
+        my_grads, _ = rnn_backward(self.da, self.parameters, self.cache)
+        grads_out = compute_output_layer_gradients(self.dy, self.a_out)
+        my_grads.update(grads_out)
+
         # Scale by number of timesteps to match Keras' default reduction
         T = self.T_x
         for key in ["dWax", "dWaa", "dba", "dWya", "dby"]:
