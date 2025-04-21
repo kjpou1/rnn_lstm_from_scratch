@@ -87,7 +87,7 @@ def main(
         a, logits, caches = lstm_forward(x_seq, a_prev, parameters)
 
         # 2. Compute cross-entropy loss and gradient w.r.t. logits (∂L/∂z)
-        curr_loss, dy = compute_loss_and_grad(logits, y_seq)
+        curr_loss, dy = compute_loss_and_grad(logits, y_seq, reduction="mean")
 
         # 3. Project output gradients back to hidden states (∂L/∂a)
         da = project_logit_grad_to_hidden(dy, parameters["Wy"])
