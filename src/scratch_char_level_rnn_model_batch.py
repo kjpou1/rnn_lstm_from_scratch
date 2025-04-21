@@ -18,6 +18,8 @@ import argparse
 import numpy as np
 
 from src.sampling import generate_text
+from src.utils.grad_utils import compute_output_layer_gradients
+from src.utils.loss_utils import compute_loss_and_grad, project_logit_grad_to_hidden
 
 from .data_prep import load_dataset
 from .models.rnn_model import (
@@ -110,34 +112,53 @@ def train_model(
     optimizer = get_optimizer(optimizer_name, learning_rate)
 
     for epoch in range(epochs):
+        # === 1. Initialize epoch tracking ===
         epoch_loss = 0
         num_batches = 0
 
+        # === 2. Iterate over mini-batches (optionally shuffled) ===
         for batch_x, batch_y in batchify(
             X, Y, batch_size, seed=epoch if deterministic else None
         ):
             for x_seq, y_seq in zip(batch_x, batch_y):
-                cache = rnn_forward(x_seq, np.zeros((n_a, 1)), parameters)
-                _, _, logits, _ = cache
+                # === 3. Stateless forward pass ===
+                a0 = np.zeros((n_a, 1))  # No hidden carryover in batch training
+                cache = rnn_forward(x_seq, a0, parameters)
+                _, _, logits, _ = cache  # logits shape: (vocab_size, T_x)
 
-                curr_loss = cross_entropy_loss(logits, y_seq)  # <--- using logits
-                loss = smooth(loss, curr_loss)
+                # === 4. Compute loss and ∂L/∂logits ===
+                curr_loss, dy = compute_loss_and_grad(logits, y_seq, reduction="sum")
 
+                # === 5. Project ∂L/∂logits to ∂L/∂a for RNN backward
+                da = project_logit_grad_to_hidden(dy, parameters["Wya"])
+
+                # === 6. Backward pass through time
                 gradients, a = rnn_backward(x_seq, y_seq, parameters, cache)
+
+                # === 7. Compute ∂L/∂Wya and ∂L/∂by from logits
+                grads_out = compute_output_layer_gradients(dy, a)
+                gradients.update(grads_out)
+
+                # === 8. Clip gradients to prevent exploding updates
                 gradients = clip(gradients, maxValue=clip_value)
+
+                # === 9. Apply optimizer step
                 parameters = optimizer.update(parameters, gradients)
 
+                # === 10. Track batch loss
                 epoch_loss += curr_loss
                 num_batches += 1
 
+        # === 11. Average loss for the epoch ===
         avg_loss = epoch_loss / num_batches
 
-        # Save best parameters
+        # === 12. Save best model so far ===
         if avg_loss < best_loss:
             best_loss = avg_loss
-            best_parameters = {k: np.copy(v) for k, v in parameters.items()}  # <-- COPY
+            best_parameters = {k: np.copy(v) for k, v in parameters.items()}
 
-        print(f"\nEpoch {epoch+1}/{epochs} - Loss: {avg_loss:.4f}")
+        # === 13. Logging + sampling output ===
+        print(f"\nEpoch {epoch+1}/{epochs} - Avg Loss: {avg_loss:.4f}")
 
         print(f"--- Sampling after Epoch {epoch+1} ---")
         for idx in range(3):
@@ -149,8 +170,7 @@ def train_model(
                 max_length=seq_length,
                 seed=epoch * 3 + idx,
             )
-            sample_name = generated_text[0].upper() + generated_text[1:]
-            print(sample_name)
+            print(generated_text.capitalize())
 
     return best_parameters  # <-- RETURN the best one
 

@@ -47,6 +47,8 @@ import argparse
 import numpy as np
 
 from src.sampling import generate_text
+from src.utils.grad_utils import compute_output_layer_gradients
+from src.utils.loss_utils import compute_loss_and_grad, project_logit_grad_to_hidden
 
 from .data_prep import load_dataset
 from .models.rnn_model import (
@@ -123,48 +125,66 @@ def main(
     last_dino_name = "abc"
 
     for iteration in range(num_iterations):
+        # === 1. Fetch training sample ===
         idx = iteration % len(X)
-        x_seq = X[idx]
-        y_seq = Y[idx]
+        x_seq = X[idx]  # input sequence (list of token indices)
+        y_seq = Y[idx]  # target sequence (same length, next char indices)
 
-        # Forward, backward, optimize
+        # === Clean Path: Forward → Loss + Grad → Backward → Update ===
+
+        # === 2. Forward pass ===
         cache = rnn_forward(x_seq, a_prev, parameters)
-        _, _, logits, _ = cache  # z_t shape: (vocab_size, T_x)
+        _, _, logits, _ = cache  # logits: shape (vocab_size, T_x)
 
-        # Compute loss directly on logits (like from_logits=True)
-        curr_loss = cross_entropy_loss(logits, y_seq)
-        loss = smooth(loss, curr_loss)
+        # === 3. Compute loss and ∂L/∂logits ===
+        curr_loss, dy = compute_loss_and_grad(logits, y_seq, reduction="sum")
 
-        # Backward and update
+        # === 4. Project ∂L/∂logits → ∂L/∂a for RNN backprop ===
+        da = project_logit_grad_to_hidden(dy, parameters["Wya"])
+
+        # === 5. Backward pass through RNN ===
         gradients, a = rnn_backward(x_seq, y_seq, parameters, cache)
+
+        # === 6. Output layer gradients (∂L/∂Wya, ∂L/∂by) ===
+        grads_out = compute_output_layer_gradients(dy, a)
+        gradients.update(grads_out)
+
+        # === 7. Clip gradients to mitigate exploding gradients ===
         gradients = clip(gradients, maxValue=clip_value)
+
+        # === 8. Parameter update step ===
         parameters = optimizer.update(parameters, gradients)
 
+        # === 9. Track smoothed loss (EMA) and best loss ===
+        loss = smooth(loss, curr_loss)
         if curr_loss < best_loss:
             best_loss = curr_loss
 
+        # === 10. Track gradient norm (for logging/debugging) ===
         gradient_norms = sum(
-            [np.linalg.norm(gradients[g]) for g in gradients if g.startswith("d")]
+            np.linalg.norm(gradients[g]) for g in gradients if g.startswith("d")
         )
 
-        a_prev = a[len(x_seq) - 1]  # carry hidden state forward
+        # === 11. Carry final hidden state forward ===
+        a_prev = a[len(x_seq) - 1]
 
+        # === 12. Periodic sampling ===
         if iteration % sample_every == 0:
             print(
                 f"\nIteration {iteration} - Raw Loss: {curr_loss:.4f} | Smoothed Loss: {loss:.4f} | Best Loss: {best_loss:.4f} | Grad Norm: {gradient_norms:.2f}"
             )
             print(f"\n--- Sampling after iteration: {iteration} ---")
-            for idx in range(3):
+            for i in range(3):
                 generated_text = generate_text(
                     parameters,
                     tokenizer,
                     start_string="",
                     temperature=temperature,
                     max_length=seq_length,
-                    seed=iteration + idx,
+                    seed=iteration + i,
                 )
-                sample_name = generated_text[0].upper() + generated_text[1:]
-                print(sample_name)
+                print(generated_text.capitalize())
+
     # Print the final loss
     print("Training complete")
     # The number of dinosaur names to print
