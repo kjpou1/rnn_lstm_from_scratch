@@ -19,7 +19,7 @@
       "name": "Train Dinos - Scratch",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/src/scratch_char_level_rnn_model.py",
+      "module": "src.scratch_char_level_rnn_model",
       "console": "integratedTerminal",
       "args": [
         "--dataset",
@@ -36,7 +36,7 @@
       "name": "Train Dinos - Scratch (Batch)",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/src/scratch_char_level_rnn_model_batch.py",
+      "module": "src.scratch_char_level_rnn_model_batch",
       "console": "integratedTerminal",
       "args": [
         "--dataset",
