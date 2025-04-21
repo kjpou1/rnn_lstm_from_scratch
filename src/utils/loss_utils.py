@@ -1,38 +1,53 @@
 import numpy as np
 
 
-def compute_loss_and_grad(logits, y_true):
+def compute_loss_and_grad(logits, y_true, reduction="mean"):
     """
-    Computes the cross-entropy loss and its gradient w.r.t logits.
+    Compute the cross-entropy loss and its gradient w.r.t logits.
 
     Args:
-        logits (ndarray): Shape (vocab_size, 1, T_x) or (vocab_size, T_x)
-        y_true (list[int]): Ground truth indices
+        logits (ndarray): Raw output from the model. Shape:
+                          - (vocab_size, T_x)
+                          - OR (vocab_size, 1, T_x)
+        y_true (list[int]): Ground truth token indices, length T_x
+        reduction (str): "mean" or "sum". Whether to average the loss & gradient over time.
 
     Returns:
-        loss (float)
-        dy (ndarray): Gradient w.r.t. logits, same shape as logits
+        loss (float): Total or average cross-entropy loss over time steps
+        dy (ndarray): Gradient of the loss w.r.t logits, same shape as input logits
     """
+    if reduction not in ("mean", "sum"):
+        raise ValueError(f"Invalid reduction mode: {reduction}. Use 'mean' or 'sum'.")
+
+    # --- Normalize shape ---
     if logits.ndim == 2:
-        logits = logits[:, np.newaxis, :]  # Ensure 3D shape: (vocab, 1, T_x)
+        # Expand to (vocab_size, 1, T_x) for consistent indexing
+        logits = logits[:, np.newaxis, :]
 
-    T_x = len(y_true)
-    vocab_size = logits.shape[0]
+    vocab_size, _, T_x = logits.shape
 
-    # Softmax (numerically stable)
+    # --- Numerically stable softmax ---
+    # Subtract max for numerical stability: logsumexp trick
     z = logits - np.max(logits, axis=0, keepdims=True)
     exp_z = np.exp(z)
-    probs = exp_z / np.sum(exp_z, axis=0, keepdims=True)
+    probs = exp_z / np.sum(exp_z, axis=0, keepdims=True)  # shape: (vocab, 1, T_x)
 
-    # Loss
+    # --- Cross-entropy loss ---
+    # log_probs[y_true[t], 0, t] gives log(p_true) at each timestep
     log_probs = np.log(probs + 1e-9)  # avoid log(0)
-    loss = -sum(log_probs[y_true[t], 0, t] for t in range(T_x)) / T_x
+    loss = -sum(log_probs[y_true[t], 0, t] for t in range(T_x))
 
-    # Gradient
+    if reduction == "mean":
+        loss /= T_x  # average over time steps
+
+    # --- Gradient w.r.t. logits ---
+    # ∂L/∂z = softmax - one_hot
     dy = probs.copy()
     for t in range(T_x):
         dy[y_true[t], 0, t] -= 1
-    dy /= T_x
+
+    if reduction == "mean":
+        dy /= T_x  # scale gradient like the loss
 
     return loss, dy
 
