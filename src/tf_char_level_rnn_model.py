@@ -3,7 +3,7 @@ import random
 import tensorflow as tf
 
 from data_prep import load_dataset
-from utils import pad_sequences
+from src.utils.utils import pad_sequences
 from tf_char_rnn import TFCharRNN
 from tokenizer import CharTokenizer
 

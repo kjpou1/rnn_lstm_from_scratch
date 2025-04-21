@@ -21,8 +21,14 @@ from src.models.rnn_model import (
     rnn_forward,
     update_parameters,
 )
+from src.utils.utils import (
+    cross_entropy_loss,
+    get_initial_loss,
+    get_sample,
+    smooth,
+    softmax,
+)
 from tokenizer import CharTokenizer
-from utils import cross_entropy_loss, get_initial_loss, get_sample, smooth, softmax
 
 data_size = 0
 vocab_size = 0

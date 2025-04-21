@@ -1,13 +1,18 @@
 import argparse
 import random
+
+import numpy as np
 import tensorflow as tf
-from utils import pad_sequences, set_random_seed
+
+from data_prep import load_dataset
+from src.utils.utils import pad_sequences, set_random_seed
 from tf_char_rnn import TFCharRNN
 from tokenizer import CharTokenizer
-import numpy as np
-from data_prep import load_dataset
 
-def generate_text(model, start_string, tokenizer, max_length=50, temperature=1.0, seed=None):
+
+def generate_text(
+    model, start_string, tokenizer, max_length=50, temperature=1.0, seed=None
+):
     if seed is not None:
         tf.random.set_seed(seed)
 
@@ -38,6 +43,7 @@ def generate_text(model, start_string, tokenizer, max_length=50, temperature=1.0
     generated_text = tokenizer.sequences_to_texts(generated_indices)
     return start_string + generated_text
 
+
 def batchify(X, Y, batch_size, shuffle=True):
     """Generator that yields batches, optionally shuffling data."""
     m = X.shape[0]
@@ -55,7 +61,9 @@ def batchify(X, Y, batch_size, shuffle=True):
 def loss_fn(labels, logits):
     """Sparse categorical crossentropy."""
     return tf.reduce_mean(
-        tf.keras.losses.sparse_categorical_crossentropy(labels, logits, from_logits=True)
+        tf.keras.losses.sparse_categorical_crossentropy(
+            labels, logits, from_logits=True
+        )
     )
 
 
@@ -86,7 +94,7 @@ def train_model(X, Y, vocab_size, tokenizer, epochs=10, batch_size=32, lr=0.001)
         for _ in range(3):  # Generate 3 samples
             generated_text = generate_text(
                 model,
-                start_string="",   # or pick a letter like "a"
+                start_string="",  # or pick a letter like "a"
                 tokenizer=tokenizer,
                 temperature=1.0,
                 max_length=50,
@@ -97,10 +105,15 @@ def train_model(X, Y, vocab_size, tokenizer, epochs=10, batch_size=32, lr=0.001)
 
     return model
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--seed", type=int, default=None, help="Random seed for reproducibility")
-    parser.add_argument("--deterministic", action="store_true", help="Force deterministic runs")
+    parser.add_argument(
+        "--seed", type=int, default=None, help="Random seed for reproducibility"
+    )
+    parser.add_argument(
+        "--deterministic", action="store_true", help="Force deterministic runs"
+    )
     args = parser.parse_args()
 
     if args.deterministic and args.seed is not None:
@@ -124,6 +137,11 @@ if __name__ == "__main__":
 
     # Sampling
     for _ in range(5):
-        text = generate_text(model, start_string="", tokenizer=tokenizer, seed=args.seed if args.deterministic else None)
+        text = generate_text(
+            model,
+            start_string="",
+            tokenizer=tokenizer,
+            seed=args.seed if args.deterministic else None,
+        )
         text = text[0].upper() + text[1:]
         print(text)

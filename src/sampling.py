@@ -5,7 +5,7 @@ import numpy as np
 
 from src.models.lstm_model import lstm_cell_step
 from src.models.rnn_model import rnn_cell_step
-from src.utils import sample_from_logits, softmax
+from src.utils.utils import sample_from_logits, softmax
 
 
 def generate_text(
