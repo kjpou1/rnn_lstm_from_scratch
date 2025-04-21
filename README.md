@@ -28,16 +28,14 @@ Learn how **recurrent neural networks** (RNNs) and **long short-term memory netw
     - [🧠 LSTM Tests](#-lstm-tests)
   - [📁 Project Layout](#-project-layout)
   - [📚 Datasets](#-datasets)
-  - [⚙️ Setup](#️-setup)
   - [🧪 Running the Code](#-running-the-code)
-    - [🔹 Single-Example Training](#-single-example-training)
+    - [🚀 Quickstart (Just Run It)](#-quickstart-just-run-it)
+    - [🔹 Single-Example RNN Training](#-single-example-rnn-training)
       - [CLI Arguments](#cli-arguments)
-    - [🔹 Mini-Batch Training](#-mini-batch-training)
+    - [🔹 Mini-Batch RNN Training](#-mini-batch-rnn-training)
       - [CLI Arguments](#cli-arguments-1)
-    - [🔹 LSTM Training (From Scratch)](#-lstm-training-from-scratch)
+    - [🔹 Single-Example LSTM Training](#-single-example-lstm-training)
       - [CLI Arguments](#cli-arguments-2)
-  - [⚡ Quickstart](#-quickstart)
-    - [🔁 Tip: Reset the environment if needed](#-tip-reset-the-environment-if-needed)
   - [✍️ Example Output](#️-example-output)
   - [🛠️ Coming Soon](#️-coming-soon)
   - [🧩 Built With](#-built-with)
@@ -239,83 +237,47 @@ Just drop a `.txt` file into the `data/` folder — you’re ready to go!
 
 ---
 
-
-## ⚙️ Setup
-
-Clone the repo and install dependencies:
-
-```bash
-git clone https://github.com/kjpou1/rnn-lstm-from-scratch.git
-cd rnn-lstm-from-scratch
-python -m venv .venv
-source .venv/bin/activate  # or .venv\Scripts\activate on Windows
-pip install -r requirements.txt
-```
-
-Set the Python path to allow module-based execution:
-
-```bash
-export PYTHONPATH=.
-```
-
-Or add it permanently to your shell profile (`.zshrc`, `.bashrc`, etc.):
-
-```bash
-echo 'export PYTHONPATH=.' >> ~/.zshrc
-```
-
----
-
-
-
 ## 🧪 Running the Code
 
-This project includes two scratch-built NumPy training scripts:
+This project includes **three** from-scratch NumPy training scripts:
 
-- 🧬 `scratch_char_level_rnn_model.py`: single-example RNN training
-- 🧪 `scratch_char_level_rnn_model_batch.py`: mini-batch RNN training
+- 🧬 `scratch_char_level_rnn_model.py` — Single-example RNN training
+- 🧪 `scratch_char_level_rnn_model_batch.py` — Mini-batch RNN training
+- 🧠 `scratch_char_level_lstm_model.py` — Single-example LSTM training
 
-> ✅ Before running either script, be sure to set:
+> ✅ Before running any script, be sure to set your environment up:
+
 ```bash
+# Step 1: Install dependencies
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# Step 2: Enable local imports
 export PYTHONPATH=.
 ```
 
 ---
 
-### 🔹 Single-Example Training
+### 🚀 Quickstart (Just Run It)
+
+```bash
+# Mini-batch RNN training (20 epochs, Adam)
+python -m src.scratch_char_level_rnn_model_batch --dataset dinos --epochs 20 --optimizer adam --learning_rate 0.01
+
+# Single-example RNN training (22k iters, RMSProp optimizer)
+python -m src.scratch_char_level_rnn_model --dataset dinos --iterations 22001 --sample_every 2000 --optimizer rms --learning_rate 0.005
+
+# Single-example LSTM training (22k iters, Adam)
+python -m src.scratch_char_level_lstm_model --dataset dinos --iterations 22001 --sample_every 2000 --optimizer adam --learning_rate 0.005
+```
+
+---
+
+### 🔹 Single-Example RNN Training
 
 ```bash
 python -m src.scratch_char_level_rnn_model
-
-or
-
-PYTHONPATH=. python -m src.scratch_char_level_rnn_model
-```
-
-#### CLI Arguments
-
-| Argument            | Description                                                                 |
-|---------------------|-----------------------------------------------------------------------------|
-| `--dataset`         | Dataset name (e.g. `dinos` → `data/dinos.txt`)                              |
-| `--iterations`      | Number of training iterations                                               |
-| `--learning_rate`   | Learning rate for gradient descent                                          |
-| `--optimizer`       | Optimizer type: `sgd`, `momentum`, `rms`, or `adam`                         |
-| `--temperature`     | Sampling temperature: <br>`<1` = more deterministic, `>1` = more creative   |
-| `--hidden_size`     | Number of RNN hidden units                                                  |
-| `--sample_every`    | Print sampled text every N iterations                                       |
-| `--seq_length`      | Maximum length of generated samples                                         |
-| `--clip_value`      | Gradient clipping threshold                                                 |
-
----
-
-### 🔹 Mini-Batch Training
-
-```bash
-python -m src.scratch_char_level_rnn_model_batch
-
-or 
-
-PYTHONPATH=. python -m src.scratch_char_level_rnn_model_batch
 ```
 
 #### CLI Arguments
@@ -323,95 +285,70 @@ PYTHONPATH=. python -m src.scratch_char_level_rnn_model_batch
 | Argument            | Description                                                                 |
 |---------------------|-----------------------------------------------------------------------------|
 | `--dataset`         | Dataset name (e.g. `dinos`)                                                 |
-| `--epochs`          | Number of training epochs (full data passes)                                |
-| `--batch_size`      | Size of mini-batches                                                        |
-| `--learning_rate`   | Learning rate                                                               |
+| `--iterations`      | Number of training iterations                                               |
+| `--learning_rate`   | Learning rate for gradient descent                                          |
 | `--optimizer`       | Optimizer type: `sgd`, `momentum`, `rms`, or `adam`                         |
 | `--temperature`     | Sampling temperature                                                        |
-| `--hidden_size`     | Hidden layer size                                                           |
-| `--seq_length`      | Length of generated sequences                                               |
-| `--clip_value`      | Max allowed gradient norm (clipping)                                       |
-| `--deterministic`   | Set this flag for deterministic shuffling (reproducibility)                |
-
-> The mini-batch script uses **line-by-line training** and applies `pad_sequences()` to handle variable input lengths.
+| `--hidden_size`     | Number of hidden units                                                      |
+| `--sample_every`    | Interval for printing sample output                                         |
+| `--seq_length`      | Maximum sample generation length                                            |
+| `--clip_value`      | Gradient clipping threshold                                                 |
 
 ---
 
-### 🔹 LSTM Training (From Scratch)
+### 🔹 Mini-Batch RNN Training
 
 ```bash
-python -m src.scratch_char_level_lstm_model
-
-or
-
-PYTHONPATH=. python -m src.scratch_char_level_lstm_model
+python -m src.scratch_char_level_rnn_model_batch
 ```
 
 #### CLI Arguments
 
 | Argument            | Description                                                                 |
 |---------------------|-----------------------------------------------------------------------------|
-| `--dataset`         | Dataset name (e.g. `dinos` → `data/dinos.txt`)                              |
-| `--iterations`      | Number of training iterations                                               |
-| `--learning_rate`   | Learning rate for gradient descent                                          |
+| `--dataset`         | Dataset name (e.g. `dinos`)                                                 |
+| `--epochs`          | Number of training epochs                                                   |
+| `--batch_size`      | Mini-batch size                                                             |
+| `--learning_rate`   | Learning rate                                                               |
 | `--optimizer`       | Optimizer type: `sgd`, `momentum`, `rms`, or `adam`                         |
-| `--temperature`     | Sampling temperature: <br>`<1` = more deterministic, `>1` = more creative   |
-| `--hidden_size`     | Number of LSTM hidden units                                                 |
-| `--sample_every`    | Print sampled text every N iterations                                       |
-| `--seq_length`      | Maximum length of generated samples                                         |
+| `--temperature`     | Sampling temperature                                                        |
+| `--hidden_size`     | Number of hidden units                                                      |
+| `--seq_length`      | Maximum sample generation length                                            |
+| `--clip_value`      | Gradient clipping threshold                                                 |
+| `--deterministic`   | Flag for reproducible shuffling                                             |
+
+---
+
+### 🔹 Single-Example LSTM Training
+
+```bash
+python -m src.scratch_char_level_lstm_model
+```
+
+#### CLI Arguments
+
+| Argument            | Description                                                                 |
+|---------------------|-----------------------------------------------------------------------------|
+| `--dataset`         | Dataset name (e.g. `dinos`)                                                 |
+| `--iterations`      | Number of training iterations                                               |
+| `--learning_rate`   | Learning rate                                                               |
+| `--optimizer`       | Optimizer type: `sgd`, `momentum`, `rms`, or `adam`                         |
+| `--temperature`     | Sampling temperature                                                        |
+| `--hidden_size`     | Number of hidden units                                                      |
+| `--sample_every`    | Interval for printing sample output                                         |
+| `--seq_length`      | Maximum sample generation length                                            |
 | `--clip_value`      | Gradient clipping threshold                                                 |
 
 ---
 
-✅ This training script follows the **clean gradient flow** philosophy:
+✅ All training scripts follow the same **modular structure**:
 
 > `Forward → Loss (+ dy) → da → Backward → Output Layer Gradients → Update`
 
-No loss is computed inside the backward pass. You explicitly compute:
-
-- `dy = ∂L/∂z` (via `compute_loss_and_grad`)
-- `da = ∂L/∂a` (via `project_logit_grad_to_hidden`)
-- Then pass `da` into `lstm_backwards`
-
-This keeps the LSTM model logic modular and easy to test.
+Loss is computed **outside** the model.  
+Sampling is modular, temperature-scaled, and consistent across RNN/LSTM.
 
 ---
-
-Here's a polished **Quickstart** section you can drop directly into your `README.md`. I’ll also tell you where to place it.
-
----
-
-
-## ⚡ Quickstart
-
-Want to skip the flags and just run something?
-
-Here are 3 quick commands to get you training instantly — one for each mode:
-
-```bash
-# 🧪 Mini-batch RNN training (NumPy)
-python -m src.scratch_char_level_rnn_model_batch --dataset dinos --epochs 20 --optimizer adam --learning_rate 0.005
-
-# 🧬 Single-example RNN training (NumPy)
-python -m src.scratch_char_level_rnn_model --dataset dinos --iterations 22001 --sample_every 2000 --optimizer rms --learning_rate 0.005
-
-# 🧠 Single-example LSTM training (NumPy)
-python -m src.scratch_char_level_lstm_model --dataset dinos --iterations 22001 --sample_every 2000 --optimizer adam --learning_rate 0.005
-```
-
-No config files, no magic — just raw NumPy and CLI args.  
-Each script prints sample output every few steps so you can **see it learn live.**
-
----
-
-### 🔁 Tip: Reset the environment if needed
-
-```bash
-export PYTHONPATH=.
-```
-
----
-
 
 ## ✍️ Example Output
 After training on dinosaur names:
