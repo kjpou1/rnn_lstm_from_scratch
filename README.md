@@ -143,9 +143,6 @@ Our goal is to **learn by building**, not just by using. That means stepping awa
 | Optimizers (SGD, RMSProp, Adam) | ✅ | ✅ | Complete |
 
 ---
-Absolutely — here's the updated full **🧠 Design Decisions** section including your new gradient flow philosophy:
-
----
 
 ## 🧠 Design Decisions
 
