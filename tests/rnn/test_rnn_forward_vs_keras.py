@@ -6,7 +6,7 @@ from tensorflow.keras.layers import Activation, Dense, Input, SimpleRNN
 from tensorflow.keras.models import Model
 
 from src.models.rnn_model import initialize_rnn_parameters, rnn_forward
-from src.utils import softmax
+from src.utils.utils import softmax
 
 
 class TestRNNForwardVsKeras(unittest.TestCase):

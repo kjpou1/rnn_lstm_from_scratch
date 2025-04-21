@@ -22,6 +22,7 @@ Learn how **recurrent neural networks** (RNNs) and **long short-term memory netw
   - [📈 Features Overview](#-features-overview)
   - [🧠 Design Decisions](#-design-decisions)
     - [❗Logits instead of Softmax in the Forward Pass](#logits-instead-of-softmax-in-the-forward-pass)
+    - [🔁 Clean Gradient Flow (Forward → Loss → Backward)](#-clean-gradient-flow-forward--loss--backward)
   - [✅ Tests](#-tests)
     - [🔁 RNN Tests](#-rnn-tests)
     - [🧠 LSTM Tests](#-lstm-tests)
@@ -134,10 +135,15 @@ Our goal is to **learn by building**, not just by using. That means stepping awa
 | Optimizers (SGD, RMSProp, Adam) | ✅ | ✅ | Complete |
 
 ---
+Absolutely — here's the updated full **🧠 Design Decisions** section including your new gradient flow philosophy:
+
+---
 
 ## 🧠 Design Decisions
 
 This project **intentionally deviates** from the Coursera implementation in key places to align better with deep learning best practices:
+
+---
 
 ### ❗Logits instead of Softmax in the Forward Pass
 
@@ -151,6 +157,26 @@ Unlike the original course, we do **not apply softmax during the forward pass**.
 
 This was a **conscious architectural decision** — not a shortcut.  
 It helps us better debug gradients, align with frameworks, and prepare for deeper experiments like temperature sampling and attention mechanisms.
+
+---
+
+### 🔁 Clean Gradient Flow (Forward → Loss → Backward)
+
+We restructured the training pipeline to follow a more **modular and intuitive gradient flow**:
+
+> `Forward → Loss (+ dy) → da → Backward → Output Layer Gradients → Update`
+
+This change was driven by confusion around the original implementation, which computed the loss *inside* the backward function.  
+After going through previous ML and deep learning course material, this design felt inconsistent — **why would the loss be calculated during backprop?** It broke the expected flow and made reasoning about gradients harder than it needed to be to me.
+
+**Why this design is cleaner and easier to understand:**
+
+- ✅ Each step in the training loop does one thing: forward pass, loss computation, gradient propagation, parameter updates.
+- ✅ Easier to debug, test, and visualize: `dy` (∂L/∂z) and `da` (∂L/∂a) are explicit, inspectable intermediates.
+- ✅ Aligns with best practices in frameworks like TensorFlow and PyTorch, where `loss.backward()` happens outside model logic.
+- ✅ Sets the stage for adding flexible features like different loss functions, regularization, or advanced optimizers.
+
+This cleanup significantly improved both the structure of the code and the *clarity of the learning process*.
 
 ---
 

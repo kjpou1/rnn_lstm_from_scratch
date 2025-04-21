@@ -55,7 +55,7 @@ class TestNumericalGradientCheck(unittest.TestCase):
 
         parameters = initialize_lstm_parameters(n_a, n_x, n_y)
         _, _, caches = lstm_forward(x, a0, parameters)
-        analytical_grads = lstm_backwards(da, (caches, x))
+        analytical_grads = lstm_backwards(da, caches)
         dWf_analytical = analytical_grads["dWf"]
 
         dWf_numeric = numerical_gradient(
@@ -77,7 +77,7 @@ class TestNumericalGradientCheck(unittest.TestCase):
 
         parameters = initialize_lstm_parameters(n_a, n_x, n_y)
         _, _, caches = lstm_forward(x, a0, parameters)
-        analytical_grads = lstm_backwards(da, (caches, x))
+        analytical_grads = lstm_backwards(da, caches)
         dbf_analytical = analytical_grads["dbf"]
 
         dbf_numeric = numerical_gradient(

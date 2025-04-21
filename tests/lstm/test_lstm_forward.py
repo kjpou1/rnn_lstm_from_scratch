@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 
 from src.models.lstm_model import initialize_lstm_parameters, lstm_forward
-from src.utils import softmax
+from src.utils.utils import softmax
 
 
 class TestLSTMForward(unittest.TestCase):

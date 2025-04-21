@@ -4,7 +4,7 @@ import numpy as np
 
 from src.models.rnn_model import initialize_rnn_parameters, rnn_backward, rnn_forward
 from src.optimizers.sgd_optimizer import SGDOptimizer
-from src.utils import clip, cross_entropy_loss, smooth
+from src.utils.utils import clip, cross_entropy_loss, smooth
 
 
 class TestLossCurve(unittest.TestCase):

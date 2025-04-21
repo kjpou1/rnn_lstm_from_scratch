@@ -33,7 +33,7 @@ class TestLSTMBackwards(unittest.TestCase):
         self.da = np.random.randn(self.n_a, 1, self.T_x)  # shape (n_a, 1, T_x)
 
     def test_shapes_of_gradients(self):
-        grads = lstm_backwards(self.da, (self.caches, self.x_seq))
+        grads = lstm_backwards(self.da, self.caches)
 
         # self.assertEqual(grads["dx"].shape, (self.T_x,))
         self.assertEqual(grads["da0"].shape, (self.n_a, 1))
@@ -49,7 +49,7 @@ class TestLSTMBackwards(unittest.TestCase):
             self.assertEqual(grads[name].shape, (self.n_a, 1), f"{name} shape mismatch")
 
     def test_print_sample_values(self):
-        grads = lstm_backwards(self.da, (self.caches, self.x_seq))
+        grads = lstm_backwards(self.da, self.caches)
 
         print("\n🔍 Sample values from lstm_backwards:")
         # print("dx[0] =", grads["dx"][0])
@@ -60,7 +60,7 @@ class TestLSTMBackwards(unittest.TestCase):
     def test_gradient_accumulation_consistency(self):
         from src.models.lstm_model import lstm_step_backward
 
-        grads_seq = lstm_backwards(self.da, (self.caches, self.x_seq))
+        grads_seq = lstm_backwards(self.da, self.caches)
 
         # Init accumulators
         dWf_acc = np.zeros_like(self.parameters["Wf"])

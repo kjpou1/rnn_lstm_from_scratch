@@ -5,7 +5,7 @@ import tensorflow as tf
 from tensorflow.keras.layers import Dense, LSTMCell
 
 from src.models.lstm_model import lstm_cell_step
-from src.utils import softmax  # Your from-scratch version
+from src.utils.utils import softmax  # Your from-scratch version
 
 
 class TestCompareLSTMWithKeras(unittest.TestCase):

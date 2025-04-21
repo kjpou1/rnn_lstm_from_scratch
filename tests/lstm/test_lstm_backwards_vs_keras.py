@@ -10,7 +10,7 @@ from src.models.lstm_model import (
     lstm_backwards,
     lstm_forward,
 )
-from src.utils import softmax
+from src.utils.utils import softmax
 
 
 class TestLSTMBackwardsVsKeras(unittest.TestCase):
@@ -108,7 +108,7 @@ class TestLSTMBackwardsVsKeras(unittest.TestCase):
         keras_da0 = grads[4].numpy().T  # (n_a, m)
 
         # Get your gradients
-        my_grads = lstm_backwards(self.da, (self.caches, self.x_np))
+        my_grads = lstm_backwards(self.da, self.caches)
 
         # Extract Keras gate-wise gradients
         keras_dkernel = keras_grads[0].numpy()
