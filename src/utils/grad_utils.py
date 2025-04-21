@@ -3,27 +3,38 @@ import numpy as np
 
 def compute_output_layer_gradients(dy, a):
     """
-    Computes gradients for the output layer weights and biases
-    by projecting the loss gradient (dy) back through the output layer.
+    Compute gradients for output layer weights.
 
     Args:
-        dy (ndarray): Gradient of loss w.r.t. logits,
-                      shape (n_y, m, T_x)
-        a  (ndarray): Hidden states from forward pass,
-                      shape (n_a, m, T_x)
+        dy: ∂L/∂logits, shape (n_y, T_x)
+        a: Dict or array of hidden states
 
     Returns:
-        dict: Dictionary with:
-            - "dWy": Gradient w.r.t. output weights, shape (n_y, n_a)
-            - "dby": Gradient w.r.t. output biases, shape (n_y, 1)
+        dict: dWya, dWy (if needed), dby
     """
-    n_y, _, T_x = dy.shape
-    n_a, _, _ = a.shape
+    # print("dy.shape before squeeze:", dy.shape)
+    dy = np.squeeze(dy, axis=1)
+    # print("dy.shape:", dy.shape)
+    n_y, T_x = dy.shape
 
-    dy_flat = dy.reshape(n_y, -1)  # (n_y, m*T_x)
-    a_flat = a.reshape(n_a, -1)  # (n_a, m*T_x)
+    # Determine hidden size from any a[t]
+    # Adapter to support both styles
+    if isinstance(a, dict):
+        n_a = a[0].shape[0]
+        get_at = lambda t: a[t]  # shape (n_a, 1)
+    else:
+        if a.ndim == 3 and a.shape[1] == 1:
+            a = np.squeeze(a, axis=1)  # (n_a, T_x)
+        n_a = a.shape[0]
+        get_at = lambda t: a[:, [t]]  # shape (n_a, 1)
 
-    dWy = np.dot(dy_flat, a_flat.T)  # (n_y, n_a)
-    dby = np.sum(dy, axis=(1, 2)).reshape(-1, 1)  # (n_y, 1)
+    dWya = np.zeros((n_y, n_a))
+    dby = np.zeros((n_y, 1))
 
-    return {"dWy": dWy, "dby": dby}
+    for t in range(T_x):
+        a_t = get_at(t)  # works for both dict and array
+        dWya += np.dot(dy[:, [t]], a_t.T)
+        dby += dy[:, [t]]
+
+    # TODO: consolidate dWy vs dWya naming across RNN/LSTM
+    return {"dWy": dWya, "dWya": dWya, "dby": dby}
